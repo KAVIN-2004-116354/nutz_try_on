@@ -1,0 +1,118 @@
+{
+  "1": {
+    "inputs": {
+      "image": "person_1.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "2": {
+    "inputs": {
+      "image": "garment_1.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "5": {
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "shirt": true,
+      "top": true,
+      "sweater": false,
+      "cardigan": false,
+      "jacket": false,
+      "vest": false,
+      "pants": false,
+      "shorts": false,
+      "skirt": false,
+      "coat": false,
+      "dress": false,
+      "jumpsuit": false,
+      "cape": false,
+      "glasses": false,
+      "hat": false,
+      "hairaccessory": false,
+      "tie": false,
+      "glove": false,
+      "watch": false,
+      "belt": false,
+      "legwarmer": false,
+      "tights": false,
+      "sock": false,
+      "shoe": false,
+      "bagwallet": false,
+      "scarf": false,
+      "umbrella": false,
+      "hood": false,
+      "collar": false,
+      "lapel": false,
+      "epaulette": false,
+      "sleeve": false,
+      "pocket": false,
+      "neckline": false,
+      "buckle": false,
+      "zipper": false,
+      "applique": false,
+      "bead": false,
+      "bow": false,
+      "flower": false,
+      "fringe": false,
+      "ribbon": false,
+      "rivet": false,
+      "ruffle": false,
+      "sequin": false,
+      "tassel": false
+    },
+    "class_type": "FashionClothMask",
+    "_meta": {
+      "title": "Fashion Cloth Mask"
+    }
+  },
+  "3": {
+    "inputs": {
+      "mask_grow": 25,
+      "mixed_precision": "fp16",
+      "seed": 0,
+      "steps": 40,
+      "cfg": 2.5,
+      "attn_ckpt_version": "mix",
+      "device": "auto",
+      "image": [
+        "1",
+        0
+      ],
+      "mask": [
+        "5",
+        0
+      ],
+      "refer_image": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "CatVTONNode",
+    "_meta": {
+      "title": "CatVTON Node"
+    }
+  },
+  "4": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "dataset_name": "Wikimedia_Placeholder_Pair",
+  "version": "1.0",
+  "description": "A local 1-pair subset for baseline reproducibility testing.",
+  "samples": [
+    {
+      "sample_id": "local_pair_001",
+      "person_image": "data/benchmark/person/person_1.jpg",
+      "garment_image": "data/benchmark/garment/garment_1.jpg"
+    }
+  ]
+}
