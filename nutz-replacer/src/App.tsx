@@ -292,11 +292,11 @@ export const App: React.FC = () => {
           {/* Workspace Header & Curated Quick Looks */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#171717] tracking-tight">
-                Virtual Dressing Room
+              <h2 className="text-3xl sm:text-5xl font-serif text-[#171717] tracking-tight">
+                The Fitting Room
               </h2>
-              <p className="text-sm text-slate-500 mt-1 max-w-xl font-normal">
-                Select a model portrait on the left and choose a garment to preview how the outfit drapes onto your posture.
+              <p className="text-sm text-slate-500 mt-2 max-w-xl font-normal">
+                Select a model portrait on the left and choose an outfit to preview how luxury tailoring and fabric weave drape onto your posture.
               </p>
             </div>
 

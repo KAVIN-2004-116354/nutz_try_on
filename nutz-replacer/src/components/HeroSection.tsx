@@ -46,25 +46,13 @@ export const HeroSection: React.FC = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[720px] h-[300px] bg-gradient-to-b from-[#EAE6F9]/60 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        {/* Refined editorial tag - zero cheesy sparkles */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8E8EF] shadow-sm mb-7">
-          <span className="w-2 h-2 rounded-full bg-[#171717]" />
-          <span className="text-xs font-bold text-[#171717] tracking-wider uppercase">
-            Virtual Dressing Atelier
-          </span>
-          <span className="text-gray-300">•</span>
-          <span className="text-xs font-medium text-slate-500">
-            Precision Fabric Simulation
-          </span>
-        </div>
-
-        {/* Master Headline: Clean, human, elegant */}
+        {/* Master Headline: High-fashion editorial typography */}
         <h1 
           ref={headlineRef} 
-          className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#171717] tracking-tight leading-[1.08] mb-6 max-w-4xl mx-auto"
+          className="text-5xl sm:text-7xl lg:text-8xl font-serif text-[#171717] tracking-tight leading-[1.05] mb-6 max-w-4xl mx-auto font-normal"
         >
           See Yourself in Any Outfit. <br className="hidden sm:inline" />
-          <span className="text-[#5B3DF0]">Flawlessly Fitted.</span>
+          <span className="font-sans font-extrabold italic text-[#171717]">Flawlessly Fitted.</span>
         </h1>
 
         {/* Editorial Subtitle */}
