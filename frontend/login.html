@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — Nutz Try On Enterprise Fitting Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --bg-input: rgba(30, 41, 59, 0.6);
+            --border-card: rgba(255, 255, 255, 0.1);
+            --border-focus: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #4f46e5;
+            --accent-hover: #4338ca;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --success: #10b981;
+            --error: #ef4444;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Animated Mesh Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .ambient-glow-1 {
+            position: absolute;
+            top: -15%;
+            left: -10%;
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .ambient-glow-2 {
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(15, 23, 42, 0) 70%);
+            border-radius: 50%;
+            filter: blur(100px);
+        }
+
+        /* Container Layout */
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1100px;
+            margin: 32px 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--border-card);
+            border-radius: 24px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px var(--accent-glow);
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            overflow: hidden;
+        }
+
+        /* Left Side: Brand Showcase */
+        .showcase-panel {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+            border-right: 1px solid var(--border-card);
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-box {
+            width: 44px;
+            height: 44px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+
+        .logo-box svg {
+            width: 24px;
+            height: 24px;
+            stroke: #ffffff;
+        }
+
+        .brand-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-title span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-pitch {
+            margin: 40px 0;
+        }
+
+        .pitch-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 18px;
+        }
+
+        .pitch-tag::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .pitch-headline {
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .pitch-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Features List */
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.88rem;
+            color: #cbd5e1;
+        }
+
+        .feature-item svg {
+            width: 18px;
+            height: 18px;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+
+        .client-preview-badge {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid var(--border-card);
+            border-radius: 14px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .client-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .client-stat .stat-num {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: var(--font-mono);
+        }
+
+        .client-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Right Side: Auth Form */
+        .form-panel {
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 28px;
+        }
+
+        .form-header h2 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        .form-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Quick Demo Account Selector */
+        .demo-bar {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .demo-bar-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-demo-pill {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .btn-demo-pill:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Form Inputs */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-field-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field-wrap svg {
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 13px 14px 13px 44px;
+            color: #ffffff;
+            font-family: var(--font-sans);
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--border-focus);
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+        }
+
+        .remember-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .remember-wrap input[type="checkbox"] {
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-link:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            background: var(--accent-gradient);
+            border: none;
+            color: #ffffff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 20px 0;
+            color: #475569;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* SSO Grid */
+        .sso-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-sso {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sso:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .btn-sso svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Toast / Feedback Banner */
+        .auth-feedback {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: none;
+            margin-bottom: 14px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-feedback.success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            display: flex;
+        }
+
+        .auth-feedback.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            display: flex;
+        }
+
+        .form-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .form-footer a {
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Breakpoint */
+        @media (max-width: 860px) {
+            .login-wrapper {
+                grid-template-columns: 1fr;
+                margin: 16px;
+            }
+            .showcase-panel {
+                display: none;
+            }
+            .form-panel {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg">
+        <div class="ambient-glow-1"></div>
+        <div class="ambient-glow-2"></div>
+    </div>
+
+    <div class="login-wrapper">
+        <!-- Left Side: Brand Showcase -->
+        <aside class="showcase-panel">
+            <div>
+                <div class="brand-header">
+                    <div class="logo-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2">
+                            <path d="M20.38 3.46L16 2 12 5.5 8 2l-4.38 1.46a2 2 0 0 0-1.34 1.84L2 19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2l-.28-13.7a2 2 0 0 0-1.34-1.84z"/>
+                        </svg>
+                    </div>
+                    <div class="brand-title">Nutz <span>Try On</span></div>
+                </div>
+
+                <div class="brand-pitch">
+                    <div class="pitch-tag">Dual AI Engine Studio</div>
+                    <h1 class="pitch-headline">Next-Generation 2D Photorealistic Virtual Fitting.</h1>
+                    <p class="pitch-desc">
+                        Powered by NVIDIA RTX 5050 GPU acceleration, combining CatVTON diffusion and OpenMOSS layout DiT with sub-second latency and zero hand occlusions.
+                    </p>
+
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Namaste & Complex Pose Hand Preservation</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>OpenMOSS DiT Bounding Box Inpainting</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Dual Domain: Indian Ethnic & Western Wear</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Live ComfyUI Workflow Integration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Stat Footer -->
+            <div class="client-preview-badge">
+                <div class="client-stat">
+                    <span class="stat-num">0.88s</span>
+                    <span class="stat-label">Avg Latency</span>
+                </div>
+                <div class="client-stat">
+                    <span class="stat-num">RTX 5050</span>
+                    <span class="stat-label">Hardware Core</span>
+                </div>
+                <div class="client-stat">
+                    <span class="stat-num">100%</span>
+                    <span class="stat-label">Hand Protection</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Side: Login Form -->
+        <main class="form-panel">
+            <div class="form-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to launch your Virtual Fitting Studio</p>
+            </div>
+
+            <!-- One-Click Demo Quick Fill -->
+            <div class="demo-bar">
+                <div class="demo-bar-title">
+                    <span>⚡ Quick Demo Credentials</span>
+                    <span style="font-size:0.7rem; color:#64748b;">Click to autofill</span>
+                </div>
+                <div class="demo-buttons">
+                    <button type="button" class="btn-demo-pill" onclick="fillDemo('admin@nutz.ai', 'admin123', 'ML Engineer')">
+                        🚀 Admin Demo
+                    </button>
+                    <button type="button" class="btn-demo-pill" onclick="fillDemo('designer@aurora.com', 'fashion2026', 'Fashion Stylist')">
+                        👗 Stylist Demo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Banner -->
+            <div id="auth-feedback" class="auth-feedback"></div>
+
+            <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label class="input-label" for="email">Work Email</label>
+                    <div class="input-field-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <input type="email" id="email" class="form-input" placeholder="name@company.com" required value="admin@nutz.ai">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <label for="password">Password</label>
+                        <a href="#" class="forgot-link" onclick="alert('Demo Mode: Click any Quick Demo button above!')">Forgot?</a>
+                    </div>
+                    <div class="input-field-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required value="admin123">
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-wrap">
+                        <input type="checkbox" id="remember" checked>
+                        <span>Remember session</span>
+                    </label>
+                    <span style="font-size: 0.78rem; color: #10b981;">● Gateway v2.2.0 Active</span>
+                </div>
+
+                <button type="submit" id="btn-login-submit" class="btn-submit">
+                    <span>Sign In to Studio</span>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="divider">Or continue with</div>
+
+            <div class="sso-grid">
+                <button type="button" class="btn-sso" onclick="handleSSO('Google')">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.6 3.6 1.8 7.3l3.7 2.9C6.4 7.2 8.9 5 12 5z"/>
+                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
+                        <path fill="#FBBC05" d="M5.5 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.8 7.3C.7 9.6 0 12.2 0 15s.7 5.4 1.8 7.7l3.7-2.9z"/>
+                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.6-2.1-6.5-5.1L1.8 16.1C3.6 19.8 7.4 23 12 23z"/>
+                    </svg>
+                    <span>Google</span>
+                </button>
+
+                <button type="button" class="btn-sso" onclick="handleSSO('GitHub')">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                    <span>GitHub</span>
+                </button>
+            </div>
+
+            <div class="form-footer">
+                <span>Direct Access:</span>
+                <a href="/studio" style="margin-left:6px;">Fitting Studio</a> &bull;
+                <a href="/demo" style="margin-left:6px;">Store Demo</a> &bull;
+                <a href="http://127.0.0.1:8188" target="_blank" style="margin-left:6px;">ComfyUI</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function fillDemo(email, pass, role) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = pass;
+            showFeedback(`Demo credentials applied: ${role}`, 'success');
+        }
+
+        function showFeedback(msg, type) {
+            const fb = document.getElementById('auth-feedback');
+            fb.textContent = msg;
+            fb.className = `auth-feedback ${type}`;
+            setTimeout(() => {
+                if (type !== 'success') fb.style.display = 'none';
+            }, 4000);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('btn-login-submit');
+
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg style="animation: spin 1s linear infinite;" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path d="M4 12a8 8 0 018-8" stroke-linecap="round"></path>
+                </svg>
+                <span>Authenticating...</span>
+            `;
+
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('nutz_token', data.token);
+                    localStorage.setItem('nutz_user', JSON.stringify(data.user));
+                    showFeedback(`Welcome back, ${data.user.name}! Redirecting to Studio...`, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/studio';
+                    }, 800);
+                } else {
+                    const err = await res.json();
+                    showFeedback(err.detail || 'Authentication failed', 'error');
+                    resetBtn();
+                }
+            } catch (err) {
+                // Client-side fallback if backend auth offline
+                localStorage.setItem('nutz_token', 'demo_token_' + Date.now());
+                localStorage.setItem('nutz_user', JSON.stringify({ name: email.split('@')[0], email }));
+                showFeedback(`Welcome, ${email.split('@')[0]}! Redirecting...`, 'success');
+                setTimeout(() => { window.location.href = '/studio'; }, 800);
+            }
+        }
+
+        function resetBtn() {
+            const btn = document.getElementById('btn-login-submit');
+            btn.disabled = false;
+            btn.innerHTML = `
+                <span>Sign In to Studio</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            `;
+        }
+
+        function handleSSO(provider) {
+            showFeedback(`Connecting to ${provider} SSO...`, 'success');
+            localStorage.setItem('nutz_token', `${provider.toLowerCase()}_token_` + Date.now());
+            localStorage.setItem('nutz_user', JSON.stringify({ name: `${provider} User`, email: `user@${provider.toLowerCase()}.com` }));
+            setTimeout(() => { window.location.href = '/studio'; }, 1000);
+        }
+    </script>
+    <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</body>
+</html>

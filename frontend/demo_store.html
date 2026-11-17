@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURORA & CO. — Luxury Fashion Store | Powered by Nutz Try On</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --brand-primary: #4f46e5;
+            --border-light: #e2e8f0;
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+            --shadow-hover: 0 16px 36px -4px rgba(15, 23, 42, 0.12), 0 6px 14px -2px rgba(15, 23, 42, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Top Announcement Bar */
+        .announcement-bar {
+            background: linear-gradient(90deg, #4f46e5, #0284c7);
+            color: #ffffff;
+            text-align: center;
+            padding: 9px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 48px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .store-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--brand-primary);
+        }
+
+        .sdk-pill {
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #c7d2fe;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Hero Banner */
+        .hero {
+            padding: 56px 48px 36px 48px;
+            max-width: 1280px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 640px;
+            margin: 0 auto 30px auto;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 48px 80px 48px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+
+        .product-image-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.04);
+        }
+
+        .tryon-badge-overlay {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 5px 10px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #4f46e5;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-details {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .product-category {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .product-price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .product-price {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        /* Try-On Button */
+        .btn-tryon-live {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-tryon-live:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+        }
+
+        /* Footer */
+        footer {
+            background: #ffffff;
+            border-top: 1px solid var(--border-light);
+            padding: 36px 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer strong {
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-bar">
+        ⚡ Experience Next-Gen Virtual Try-On Powered by <strong>Nutz Try On</strong> — Photorealistic 2D Diffusion AI
+    </div>
+
+    <nav class="navbar">
+        <a href="#" class="store-logo">AURORA & CO.</a>
+        <ul class="nav-links">
+            <li><a href="#">New Arrivals</a></li>
+            <li><a href="#">Men's Edit</a></li>
+            <li><a href="#">Tailoring</a></li>
+            <li><a href="/studio" target="_blank">2D Fitting Studio</a></li>
+            <li><a href="/login" style="color:#4f46e5; font-weight:700;">Sign In</a></li>
+        </ul>
+        <div class="sdk-pill">
+            <span style="width:8px; height:8px; background:#10b981; border-radius:50%; display:inline-block;"></span>
+            Nutz Try On Active
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>The Autumn/Winter Collection</h1>
+        <p>Try on our latest garments live via your webcam or upload a photo using Nutz Try On enterprise AI.</p>
+    </header>
+
+    <main class="product-grid">
+        <!-- Product 1: Emerald Oxford Shirt -->
+        <div class="product-card">
+            <div class="product-image-container">
+                <img src="/studio/assets/sample_emerald_shirt.jpg" alt="Emerald Oxford Shirt" class="product-image">
+                <div class="tryon-badge-overlay">
+                    ✨ Virtual Try-On
+                </div>
+            </div>
+            <div class="product-details">
+                <h3 class="product-title">Emerald Silk Oxford Shirt</h3>
+                <p class="product-category">Pure Egyptian Cotton &bull; Full Sleeve</p>
+                <div class="product-price-row">
+                    <span class="product-price">$185</span>
+                    <button class="btn-tryon-live" 
+                            data-nutz-tryon 
+                            data-garment-url="/studio/assets/sample_emerald_shirt.jpg" 
+                            data-garment-name="Emerald Silk Oxford Shirt">
+                        ✨ Try On Live
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 2: Denim Jacket -->
+        <div class="product-card">
+            <div class="product-image-container">
+                <img src="/studio/assets/sample_denim_jacket.jpg" alt="Vintage Denim Jacket" class="product-image">
+                <div class="tryon-badge-overlay">
+                    ✨ Virtual Try-On
+                </div>
+            </div>
+            <div class="product-details">
+                <h3 class="product-title">Heritage Selvedge Denim Jacket</h3>
+                <p class="product-category">14oz Japanese Denim &bull; Regular Fit</p>
+                <div class="product-price-row">
+                    <span class="product-price">$260</span>
+                    <button class="btn-tryon-live" 
+                            data-nutz-tryon 
+                            data-garment-url="/studio/assets/sample_denim_jacket.jpg" 
+                            data-garment-name="Heritage Selvedge Denim Jacket">
+                        ✨ Try On Live
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 3: Black Crewneck T-Shirt -->
+        <div class="product-card">
+            <div class="product-image-container">
+                <img src="/studio/assets/sample_black_tshirt.jpg" alt="Black Crewneck Tee" class="product-image">
+                <div class="tryon-badge-overlay">
+                    ✨ Virtual Try-On
+                </div>
+            </div>
+            <div class="product-details">
+                <h3 class="product-title">Essential Heavyweight Crewneck</h3>
+                <p class="product-category">280 GSM Organic Cotton &bull; Relaxed Fit</p>
+                <div class="product-price-row">
+                    <span class="product-price">$75</span>
+                    <button class="btn-tryon-live" 
+                            data-nutz-tryon 
+                            data-garment-url="/studio/assets/sample_black_tshirt.jpg" 
+                            data-garment-name="Essential Heavyweight Crewneck">
+                        ✨ Try On Live
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 4: Navy Blazer -->
+        <div class="product-card">
+            <div class="product-image-container">
+                <img src="/studio/assets/sample_navy_blazer.jpg" alt="Navy Blazer" class="product-image">
+                <div class="tryon-badge-overlay">
+                    ✨ Virtual Try-On
+                </div>
+            </div>
+            <div class="product-details">
+                <h3 class="product-title">Tailored Navy Wool Blazer</h3>
+                <p class="product-category">Super 120s Italian Wool &bull; Slim Fit</p>
+                <div class="product-price-row">
+                    <span class="product-price">$495</span>
+                    <button class="btn-tryon-live" 
+                            data-nutz-tryon 
+                            data-garment-url="/studio/assets/sample_navy_blazer.jpg" 
+                            data-garment-name="Tailored Navy Wool Blazer">
+                        ✨ Try On Live
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 AURORA & CO. Merchant Storefront &bull; Powered by <strong>Nutz Try On</strong> Enterprise SDK</p>
+    </footer>
+
+    <!-- Nutz Try On Commercial Widget SDK -->
+    <script src="/studio/widget.js"></script>
+</body>
+</html>

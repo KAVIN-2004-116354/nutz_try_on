@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Virtual Try-On MLOps Pipeline — Complete Technical Architecture & Specification</title>
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 14mm 16mm 14mm;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background-color: #ffffff;
+    line-height: 1.55;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Header Cover */
+  .cover {
+    border-bottom: 3px solid #3b82f6;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+  }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-purple { background: #f3e8ff; color: #6b21a8; }
+  .badge-emerald { background: #d1fae5; color: #065f46; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+
+  h1 {
+    font-size: 24pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+  }
+  .subtitle {
+    font-size: 12pt;
+    color: #475569;
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 8.5pt;
+  }
+  .meta-item strong {
+    display: block;
+    color: #64748b;
+    text-transform: uppercase;
+    font-size: 7.5pt;
+    letter-spacing: 0.5px;
+  }
+
+  /* Section Styling */
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-left: 4px solid #3b82f6;
+    padding-left: 10px;
+    margin: 26px 0 12px 0;
+  }
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 16px 0 8px 0;
+  }
+  p {
+    margin: 0 0 10px 0;
+    color: #334155;
+  }
+  ul, ol {
+    margin: 0 0 12px 0;
+    padding-left: 20px;
+    color: #334155;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+
+  /* Diagrams & Callouts */
+  .diagram-box {
+    background: #0f172a;
+    color: #f1f5f9;
+    padding: 14px 18px;
+    border-radius: 6px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 7.5pt;
+    line-height: 1.35;
+    margin: 14px 0;
+    white-space: pre;
+    overflow-x: hidden;
+  }
+  .callout {
+    border-left: 4px solid #3b82f6;
+    background: #eff6ff;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 14px 0;
+    font-size: 9.5pt;
+  }
+  .callout-amber {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+  }
+  .callout strong {
+    color: #1e3a8a;
+  }
+  .callout-amber strong {
+    color: #92400e;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9pt;
+  }
+  th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  td {
+    padding: 7px 10px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  /* Code blocks */
+  code {
+    font-family: Consolas, "Courier New", Courier, monospace;
+    font-size: 8.5pt;
+    background: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* Step Cards */
+  .step-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    background: #ffffff;
+    page-break-inside: avoid;
+  }
+  .step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  .step-title {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #3b82f6;
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 8pt;
+    font-weight: 800;
+  }
+  .step-file {
+    font-family: Consolas, monospace;
+    font-size: 8pt;
+    color: #64748b;
+  }
+  .relation-tag {
+    background: #f1f5f9;
+    border-left: 3px solid #64748b;
+    padding: 6px 10px;
+    font-size: 8.5pt;
+    margin-top: 8px;
+    color: #334155;
+    border-radius: 0 4px 4px 0;
+  }
+  .relation-tag strong {
+    color: #0f172a;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  /* Footer */
+  .footer-note {
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #94a3b8;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <!-- COVER / HEADER -->
+  <div class="cover">
+    <div class="badge-row">
+      <span class="badge badge-blue">Engineering Whitepaper</span>
+      <span class="badge badge-emerald">Production MLOps v2.0.0</span>
+      <span class="badge badge-purple">CatVTON + ComfyUI</span>
+      <span class="badge badge-amber">ZenML & MLflow</span>
+    </div>
+    <h1>AI Virtual Try-On Pipeline</h1>
+    <div class="subtitle">Complete Technical Architecture, Step-by-Step Implementation, and Inter-Step Data Contracts</div>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <strong>Core Model</strong>
+        CatVTON (Diffusion Inpainting)
+      </div>
+      <div class="meta-item">
+        <strong>Orchestration</strong>
+        ZenML & ComfyUI API
+      </div>
+      <div class="meta-item">
+        <strong>Experiment Tracking</strong>
+        MLflow (SQLite & Artifact Proxy)
+      </div>
+      <div class="meta-item">
+        <strong>Data Versioning</strong>
+        DVC (Data Version Control)
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. EXECUTIVE SUMMARY -->
+  <h2>1. Executive Summary & Objective</h2>
+  <p>
+    Virtual clothing try-on presents a fundamental machine learning challenge: synthesizing a photorealistic, wrinkle-aware, and drape-consistent garment onto a target human image while strictly preserving the subject's identity (face, hairstyle, pose, body proportions, hands) and the surrounding scene.
+  </p>
+  <p>
+    This project transitions raw research-grade diffusion models into a <strong>production-ready, reproducible, and monitorable MLOps architecture</strong>. By decoupling heavy GPU tensor computing into an isolated node-based engine (ComfyUI) and orchestrating data validation, execution, experiment tracking, and client serving through ZenML, MLflow, and FastAPI, the system achieves sub-25-second inference with zero memory leakage and rigorous pipeline governance.
+  </p>
+
+  <div class="callout">
+    <strong>Key Innovation:</strong> Unlike traditional text-guided diffusion models that attempt to inject cloth appearance via Cross-Attention layers (frequently resulting in lost garment textures, blurry logos, and bleeding artifacts), <strong>CatVTON</strong> concatenates the target person, reference garment, and body-agnostic mask directly along the spatial and channel dimensions. This maintains high spatial fidelity and precise garment boundary alignment.
+  </div>
+
+  <!-- 2. HIGH-LEVEL ARCHITECTURE DIAGRAM -->
+  <h2>2. End-to-End System Architecture & Data Flow</h2>
+  <p>
+    The system is organized into five cohesive layers: Client Interaction, API & Preprocessing, Execution Engine, MLOps Tracking, and Artifact Delivery.
+  </p>
+
+  <div class="diagram-box">
++--------------------------------------------------------------------------------------------------------+
+|                                        1. CLIENT / USER LAYER                                          |
+|                E-Commerce Storefront / Swagger UI (/docs) / Web Studio Frontend / Mobile App           |
++---------------------------------------------------┬----------------------------------------------------+
+                                                    | POST /api/v1/try-on (person_image, garment_image)
+                                                    v
++--------------------------------------------------------------------------------------------------------+
+|                                    2. API & PREPROCESSING LAYER                                        |
+|   FastAPI Service (main.py):                                                                           |
+|     1. Validates & sanitizes input image buffers (size, format, dimension verification)                |
+|     2. Calls Garment Classifier (classifier.py) -> Inters aspect-ratio & category (upper/lower/full)   |
+|     3. Generates 35+ dynamic boolean mask flags (shirt, top, sleeve, collar, pants, etc.)              |
+|     4. Patches ComfyUI blueprint (workflow_api.json) with runtime filenames & dynamic mask flags       |
++---------------------------------------------------┬----------------------------------------------------+
+                                                    | HTTP POST /prompt (JSON graph dispatch)
+                                                    v
++--------------------------------------------------------------------------------------------------------+
+|                                  3. INFERENCE BACKEND (ComfyUI :8188)                                  |
+|   Visual Node Execution Graph:                                                                         |
+|     • Node 1 (LoadImage): Person Image Staging                                                         |
+|     • Node 2 (LoadImage): Garment Image Staging                                                        |
+|     • Node 5 (FashionClothMask): SCHP (Self-Correction Human Parsing) + DensePose body segmentation    |
+|     • Node 3 (CatVTONNode): Latent Inpainting UNet (Skip Cross-Attn, 25-40 steps, CFG 2.5, mix-48k)    |
+|     • Node 4 (SaveImage): Decodes latent via AutoencoderKL and writes result to ~/ComfyUI/output/      |
++-------------------------┬----------------------------------------------------┬-------------------------+
+                          | Polling & Result Retrieval                          | Lineage & Metrics Log
+                          v                                                     v
++----------------------------------------------------+ +-------------------------------------------------+
+|               4. OUTPUT & SERVING LAYER            | |            5. MLOps TRACKING LAYER              |
+|  FastAPI (main.py):                                | |  ZenML Orchestrator (pipeline.py):              |
+|   • Formats output as Base64 JSON or raw PNG stream| |   • Step-level execution logging                |
+|   • Syncs copy to outputs/ & Windows Desktop       | |  MLflow Tracking Server (:5001 / mlflow.db):    |
+|   • Updates live analytics metrics (latency, total)| |   • Parameters: steps, cfg, seed, model         |
+|                                                    | |   • Metrics: inference_latency_seconds, success |
+|                                                    | |   • Artifacts: Output PNGs linked to Run ID     |
++----------------------------------------------------+ +-------------------------------------------------+</div>
+
+  <div class="page-break"></div>
+
+  <!-- 3. DEEP DIVE INTO ALL IMPLEMENTED STEPS -->
+  <h2>3. Comprehensive Breakdown of Implemented Steps</h2>
+  <p>
+    Every stage of the pipeline fulfills a distinct responsibility with strictly defined input and output contracts.
+  </p>
+
+  <!-- STEP 1 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        Data Versioning & Benchmark Baseline
+      </div>
+      <span class="step-file">data.dvc | manifests/benchmark_dataset.json</span>
+    </div>
+    <p>
+      Generative image models are highly sensitive to dataset corruption, subtle resolution changes, and missing reference pairs. To ensure absolute data reproducibility without storing gigabytes of binary image data inside Git:
+    </p>
+    <ul>
+      <li><strong>DVC Tracking:</strong> The <code>data/benchmark/</code> directory (containing standard benchmark pairs <code>person_1.jpg</code> and <code>garment_1.jpg</code>) is tracked via content-hash pointers in <code>data.dvc</code>.</li>
+      <li><strong>Manifest Metadata:</strong> <code>manifests/benchmark_dataset.json</code> defines the schema version, ground-truth image dimensions, and sample identifiers for reproducible evaluation runs.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Feeds baseline validation pairs into Step 5 (ZenML Pipeline) and Step 8 (Standalone Baseline Runs) ensuring test coverage can be validated deterministically.
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        Garment Classification & Dynamic Masking
+      </div>
+      <span class="step-file">src/preprocessing/classifier.py</span>
+    </div>
+    <p>
+      Virtual try-on requires an <strong>agnostic mask</strong>: a binary mask that eliminates existing garments from the person's image while preserving the face, skin, arms, hands, neck, and background.
+    </p>
+    <ul>
+      <li><strong>Category Detection:</strong> Inspects the incoming garment image geometry and aspect ratio (e.g. aspect ratio &ge; 1.6 indicates full-body dress/jumpsuit; 1.0–1.3 indicates upper-body shirts/jackets).</li>
+      <li><strong>Dynamic Boolean Flags:</strong> Configures 35+ discrete boolean flags for the downstream human parser:
+        <ul>
+          <li><em>Upper Body:</em> <code>shirt=True</code>, <code>top=True</code>, <code>sweater=True</code>, <code>collar=True</code>, <code>sleeve=True</code>, <code>pants=False</code></li>
+          <li><em>Lower Body:</em> <code>pants=True</code>, <code>shorts=True</code>, <code>skirt=True</code>, <code>belt=True</code>, <code>shirt=False</code></li>
+          <li><em>Full Body:</em> <code>dress=True</code>, <code>jumpsuit=True</code>, <code>shirt=True</code>, <code>skirt=True</code></li>
+        </ul>
+      </li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> The output flag dictionary is dynamically injected into <strong>Node 5 (FashionClothMask)</strong> in Step 4, dictating exactly where the diffusion inpainter is permitted to generate pixels.
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        Core Generative Model — CatVTON
+      </div>
+      <span class="step-file">src/models/CatVTON/model/pipeline.py</span>
+    </div>
+    <p>
+      The core visual generation engine is CatVTON (Concatenation-based Virtual Try-On):
+    </p>
+    <ul>
+      <li><strong>Base Diffusion Backbone:</strong> Built upon <code>runwayml/stable-diffusion-inpainting</code> and enhanced with the <code>stabilityai/sd-vae-ft-mse</code> Autoencoder for crisp, artifact-free image decoding.</li>
+      <li><strong>Skip Cross-Attention:</strong> Traditional text cross-attention is replaced with <code>SkipAttnProcessor</code>. The model instead receives the target person, the reference garment, and the agnostic mask concatenated directly in the latent representation.</li>
+      <li><strong>Checkpoint Version ("mix"):</strong> Uses the official <code>zhengchong/CatVTON</code> mixed checkpoint (<code>mix-48k-1024</code>), trained across both the VITON-HD (upper body) and DressCode (dresses, skirts, pants) datasets at full 1024&times;768 resolution.</li>
+      <li><strong>Inference Sampling:</strong> DDIM scheduler operating at CFG = 2.5 over 25–40 steps.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Executes the core latent diffusion math within Step 4 (ComfyUI Node 3) or standalone in Step 8, transforming inputs from Steps 1 &amp; 2 into a photorealistic synthesized human subject.
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">4</span>
+        Decoupled GPU Engine & Node Graph Workflow
+      </div>
+      <span class="step-file">workflow_api.json | ComfyUI (:8188)</span>
+    </div>
+    <p>
+      Running multi-gigabyte PyTorch models directly inside a multi-threaded web API worker inevitably leads to CUDA out-of-memory errors and request blocking. The pipeline decouples inference into ComfyUI:
+    </p>
+    <ul>
+      <li><strong>Node 1 (<code>LoadImage</code>):</strong> Loads the staged person image from disk.</li>
+      <li><strong>Node 2 (<code>LoadImage</code>):</strong> Loads the staged garment image.</li>
+      <li><strong>Node 5 (<code>FashionClothMask</code>):</strong> Combines Self-Correction Human Parsing (SCHP) and DensePose body mapping to segment the person using the dynamic category flags from Step 2.</li>
+      <li><strong>Node 3 (<code>CatVTONNode</code>):</strong> Applies mask dilation (<code>mask_grow=25</code>) to eliminate boundary seams, ingests Nodes 1, 2, and 5, and executes the reverse diffusion process.</li>
+      <li><strong>Node 4 (<code>SaveImage</code>):</strong> Saves the generated PNG to <code>~/ComfyUI/output/</code>.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Managed asynchronously by FastAPI (Step 7) and ZenML (Step 5) via HTTP REST calls (<code>/prompt</code> to dispatch, <code>/history/{id}</code> to poll).
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- STEP 5 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">5</span>
+        MLOps Pipeline Orchestration
+      </div>
+      <span class="step-file">pipeline.py (ZenML)</span>
+    </div>
+    <p>
+      ZenML orchestrates the end-to-end execution of the try-on workflow, providing standardized pipelines and artifact lineage:
+    </p>
+    <ul>
+      <li><code>@step virtual_tryon_step</code>: Ingests the image filenames, verifies workflow blueprint integrity, dispatches the prompt to ComfyUI, polls for completion, measures latency, and handles artifact copying.</li>
+      <li><code>@pipeline virtual_tryon_pipeline</code>: Chains steps and enforces <code>enable_cache=False</code>. Because diffusion generation produces novel pixels per request, caching must be bypassed to avoid returning stale images.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Bridges ComfyUI execution (Step 4) with MLflow experiment tracking (Step 6), standardizing pipeline runs for automated CI/CD and future Kubernetes deployments.
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">6</span>
+        Experiment Tracking & Model Lineage
+      </div>
+      <span class="step-file">mlflow.db | mlartifacts/ | start_mlflow.sh</span>
+    </div>
+    <p>
+      Centralized tracking server operating on an embedded SQLite database (<code>mlflow.db</code>) with artifact proxy storage (<code>mlartifacts/</code>):
+    </p>
+    <ul>
+      <li><strong>Hyperparameter Logging:</strong> Automatically logs <code>model_architecture</code>, <code>person_image</code>, <code>garment_image</code>, <code>steps</code>, <code>cfg</code>, <code>seed</code>, and compute <code>device</code>.</li>
+      <li><strong>Metric Logging:</strong> Tracks <code>inference_latency_seconds</code> and <code>pipeline_success</code> flag (1.0 or 0.0).</li>
+      <li><strong>Artifact Registry:</strong> Every rendered image is committed to the MLflow artifact repository under its immutable <code>run_id</code>.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Records operational metrics generated during Step 5 and Step 8, enabling full auditability, quality regression detection, and performance tracking over time.
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">7</span>
+        Production REST API Gateway & Serving
+      </div>
+      <span class="step-file">main.py (FastAPI)</span>
+    </div>
+    <p>
+      A commercial-grade asynchronous web service providing robust endpoints for end-users and e-commerce integrations:
+    </p>
+    <ul>
+      <li><code>POST /api/v1/try-on</code>: Accepts multipart uploads, performs input validation, invokes the garment classifier (Step 2), patches the ComfyUI blueprint (Step 4), polls the job, saves local outputs, and formats the response (as JSON with base64 image data or raw streaming PNG).</li>
+      <li><code>POST /api/v1/classify-garment</code>: Standalone garment classification endpoint returning detected category and mask flags.</li>
+      <li><code>GET /api/v1/analytics</code>: Real-time telemetry reporting total requests, successful renders, average latency, and success rate.</li>
+      <li><code>GET /health</code>: System health and ComfyUI engine reachability probe.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> The central operational hub that interfaces with clients, triggering Steps 2, 4, 5, and delivering synthesized results back to the caller.
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-title">
+        <span class="step-number">8</span>
+        Standalone Baseline & Comprehensive Test Suite
+      </div>
+      <span class="step-file">src/models/run_*.py | tests/</span>
+    </div>
+    <p>
+      Provides decoupled execution scripts and automated quality assurance:
+    </p>
+    <ul>
+      <li><strong>Automatic Hardware Adaptation:</strong> <code>run_baseline.py</code>, <code>run_reproducible.py</code>, and <code>run_mlflow.py</code> dynamically detect GPU availability—using CUDA with <code>bfloat16</code> when an NVIDIA GPU is present, and gracefully falling back to CPU with <code>float32</code>.</li>
+      <li><strong>Pytest Suite:</strong> Comprehensive tests validating API response contracts (<code>test_api.py</code>), DVC data integrity (<code>test_dvc.py</code>), MLflow schema and runs (<code>test_mlflow_zenml.py</code>), and live end-to-end inference.</li>
+    </ul>
+    <div class="relation-tag">
+      <strong>Inter-Step Relation:</strong> Acts as the continuous verification harness for the entire repository, guaranteeing that changes to weights, schemas, or dependencies never break production.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- 4. INTER-STEP DATA CONTRACT MATRIX -->
+  <h2>4. Inter-Step Data Contracts & Dependency Matrix</h2>
+  <p>
+    The following table defines the exact input data, processing logic, output artifacts, and downstream dependencies across all pipeline steps:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">Step</th>
+        <th style="width: 20%;">Inputs Received</th>
+        <th style="width: 28%;">Processing & Transformation</th>
+        <th style="width: 22%;">Outputs Produced</th>
+        <th style="width: 18%;">Downstream Consumer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Data Versioning</strong></td>
+        <td>Raw benchmark imagery from upstream storage</td>
+        <td>Calculates MD5 hashes, manages <code>data.dvc</code> pointers, excludes binaries from Git</td>
+        <td><code>data/benchmark/</code> images, <code>data.dvc</code> hash pointer</td>
+        <td>Step 5 (ZenML), Step 8 (Baselines & Tests)</td>
+      </tr>
+      <tr>
+        <td><strong>2. Preprocessing & Masking</strong></td>
+        <td>Uploaded garment image file / byte buffer</td>
+        <td>Evaluates aspect ratio & spatial density; selects category and toggles 35+ cloth mask flags</td>
+        <td>Dictionary: <code>{ category, mask_flags }</code></td>
+        <td>Step 4 (ComfyUI Node 5), Step 7 (FastAPI)</td>
+      </tr>
+      <tr>
+        <td><strong>3. Core CatVTON Diffusion</strong></td>
+        <td>Person latent, garment latent, agnostic mask, DDIM timesteps</td>
+        <td>Spatial concatenation of latents; SkipCrossAttn UNet forward pass; VAE latent decode</td>
+        <td>Synthesized 1024&times;768 RGB try-on tensor / PIL Image</td>
+        <td>Step 4 (SaveImage Node 4), Step 8 (Output Disk)</td>
+      </tr>
+      <tr>
+        <td><strong>4. ComfyUI Graph Engine</strong></td>
+        <td>Patched <code>workflow_api.json</code> (images + dynamic mask flags)</td>
+        <td>Queues prompt via REST API; executes Node 1 &rarr; Node 5 &rarr; Node 3 &rarr; Node 4 graph on GPU</td>
+        <td>Rendered PNG image file in <code>~/ComfyUI/output/</code></td>
+        <td>Step 5 (ZenML Step), Step 7 (FastAPI Polling)</td>
+      </tr>
+      <tr>
+        <td><strong>5. ZenML Orchestration</strong></td>
+        <td>Staged image filenames, workflow blueprint path</td>
+        <td>Coordinates execution steps; manages caching policy; measures round-trip inference latency</td>
+        <td>ZenML pipeline run records, output image path</td>
+        <td>Step 6 (MLflow Tracking)</td>
+      </tr>
+      <tr>
+        <td><strong>6. MLflow Tracking</strong></td>
+        <td>Run metadata, hyperparameters, latency float, output image</td>
+        <td>Inserts records into SQLite <code>mlflow.db</code>; copies generated PNG to <code>mlartifacts/</code></td>
+        <td>Immutable MLflow Run ID, experiment metric curves</td>
+        <td>Engineering audit & quality regression monitoring</td>
+      </tr>
+      <tr>
+        <td><strong>7. FastAPI Serving</strong></td>
+        <td>HTTP client multipart POST request</td>
+        <td>Sanitizes files; coordinates Steps 2 & 4; converts PNG to base64; records analytics telemetry</td>
+        <td>HTTP 200 JSON payload / PNG stream; local disk copy</td>
+        <td>End-user browser, Shopify / WooCommerce plugins</td>
+      </tr>
+      <tr>
+        <td><strong>8. Baseline & Verification</strong></td>
+        <td>Target dataset, test configurations</td>
+        <td>Executes unit & E2E assertions; tests deterministic seeding; tests CPU fallback mode</td>
+        <td>Pytest PASS/FAIL status; benchmark latency benchmarks</td>
+        <td>CI/CD deployment pipelines, automated sanity checks</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 5. OPERATIONAL RUNBOOK -->
+  <h2>5. Operational Runbook & Service Execution</h2>
+  <p>
+    To operate the complete Virtual Try-On system in production or development, the services are executed as follows:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Command</th>
+        <th>Port / Endpoint</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ComfyUI Engine</strong></td>
+        <td><code>cd ~/ComfyUI &amp;&amp; python3 main.py --listen 127.0.0.1 --port 8188</code></td>
+        <td><code>http://127.0.0.1:8188</code></td>
+        <td>GPU node execution server</td>
+      </tr>
+      <tr>
+        <td><strong>MLflow Tracking</strong></td>
+        <td><code>bash start_mlflow.sh</code></td>
+        <td><code>http://127.0.0.1:5001</code></td>
+        <td>Experiment tracking dashboard & artifact registry</td>
+      </tr>
+      <tr>
+        <td><strong>FastAPI Studio API</strong></td>
+        <td><code>python3 -m try_on</code> <em>(or <code>bash start_server.sh</code>)</em></td>
+        <td><code>http://localhost:8000/docs</code></td>
+        <td>Production REST API & Swagger UI</td>
+      </tr>
+      <tr>
+        <td><strong>ZenML Pipeline</strong></td>
+        <td><code>python3 pipeline.py</code></td>
+        <td>CLI</td>
+        <td>Automated pipeline execution & validation</td>
+      </tr>
+      <tr>
+        <td><strong>Baseline Inference</strong></td>
+        <td><code>STEPS=1 python3 src/models/run_baseline.py</code></td>
+        <td>CLI / <code>outputs/</code></td>
+        <td>Rapid standalone test (supports both CPU and CUDA)</td>
+      </tr>
+      <tr>
+        <td><strong>Test Suite</strong></td>
+        <td><code>PYTHONPATH=. venv/bin/pytest tests/</code></td>
+        <td>CLI (14 test cases)</td>
+        <td>Automated unit, integration, and contract testing</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer-note">
+    Virtual Try-On MLOps Architecture Documentation &bull; Generated October 2026 &bull; Production Release 2.0.0
+  </div>
+
+</body>
+</html>

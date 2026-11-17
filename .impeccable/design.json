@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-17T13:40:00.000Z",
+  "title": "Design System: Nutz Replacer",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Electric Violet",
+        "canonical": "#5B3DF0",
+        "tonalRamp": ["#1e105e", "#2f1a94", "#4325c9", "#5b3df0", "#7f67f4", "#a594f8", "#d1c9fc", "#f0edfd"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Canvas Light",
+        "canonical": "#F5F4F8",
+        "tonalRamp": ["#1d1c24", "#3b3947", "#5c596d", "#827e99", "#ada9c4", "#d4d2e3", "#eae8f2", "#f5f4f8"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#202020", "#404040", "#6b6b6b", "#9e9e9e", "#cccccc", "#e6e6e6", "#f5f5f5", "#ffffff"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Primary Ink",
+        "canonical": "#171717",
+        "tonalRamp": ["#000000", "#171717", "#333333", "#555555", "#777777", "#999999", "#cccccc", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines and high-fashion editorial titles." },
+      "headline": { "displayName": "Headline", "purpose": "Section and artboard primary headings." },
+      "title": { "displayName": "Title", "purpose": "Card titles and modal headers." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and step instructions." },
+      "label": { "displayName": "Label", "purpose": "Status indicators, chips, and metadata badges." }
+    },
+    "shadows": [
+      { "name": "subtle", "value": "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)", "purpose": "Tonal elevation for chips, badges, and controls." },
+      { "name": "card", "value": "0 4px 20px -2px rgba(18, 24, 40, 0.05)", "purpose": "Structural elevation for white surface cards." },
+      { "name": "premium", "value": "0 12px 28px -6px rgba(91, 61, 240, 0.3)", "purpose": "Ambient glow under primary generation action." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "State transitions for hover, scale, and modal reveals." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "390px" },
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Generation Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "56px primary trigger for the virtual try-on diffusion pipeline.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"><path d=\"m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z\"/></svg>Generate New Look</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 56px; padding: 0 28px; background: #5B3DF0; color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; border: none; border-radius: 12px; box-shadow: 0 12px 28px -6px rgba(91, 61, 240, 0.3); cursor: pointer; transition: background 0.15s ease, transform 0.1s ease; } .ds-btn-primary:hover { background: #4B2EE0; } .ds-btn-primary:active { transform: scale(0.99); }"
+    },
+    {
+      "name": "Secondary Outlined Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "44px tall outlined action button for downloads and secondary options.",
+      "html": "<button class=\"ds-btn-secondary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"/></svg>Download PNG</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; background: transparent; color: #5B3DF0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; border: 2px solid #5B3DF0; border-radius: 12px; cursor: pointer; transition: background 0.15s ease; } .ds-btn-secondary:hover { background: rgba(91, 61, 240, 0.05); }"
+    },
+    {
+      "name": "White Surface Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Elevated white surface container with 20px rounded corners and subtle shadow.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Target Model</h3><p class=\"ds-card-desc\">Uploaded source photo locked for facial identity and anatomy.</p></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #E8E8EF; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px -2px rgba(18, 24, 40, 0.05); font-family: 'Plus Jakarta Sans', sans-serif; } .ds-card-title { font-size: 16px; font-weight: 700; color: #171717; margin: 0 0 4px 0; } .ds-card-desc { font-size: 13px; color: #64748B; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Haute-Tech Fitting Atelier",
+    "overview": "Nutz Replacer unites the clarity of modern e-commerce with the precision of high-fashion digital styling. The visual language evokes a luxury fashion studio rather than an algorithmic sandbox. It relies on clean architectural whitespace, solid purposeful typography, restrained deep-purple ink accents, and crisp tactile cards.",
+    "keyCharacteristics": [
+      "Restrained color economy: 90% light neutrals with deep-purple accent reserved for active intent.",
+      "Zero decorative gradients on text; typography is solid, high-contrast, and legible.",
+      "Strict touch and accessibility floor: WCAG AA contrast >= 4.5:1, touch targets >= 44x44px, body text >= 14px.",
+      "SVG-only iconography with zero emoji."
+    ],
+    "rules": [
+      { "name": "The 10% Accent Rule", "body": "The primary accent (#5B3DF0) must occupy <= 10% of any given screen surface. Its rarity signals immediate intent and direction.", "section": "colors" },
+      { "name": "No Gradient Headings", "body": "Headings and text must never use decorative gradient clips; use solid #171717 or #5B3DF0.", "section": "typography" }
+    ],
+    "dos": [
+      "Always maintain >= 44x44px touch targets on interactive mobile controls.",
+      "Always preserve the target person's original facial features, skin tone, hair, and posture.",
+      "Condition try-on directly on the garment reference image via dual-panel spatial diffusion.",
+      "Use semantic HTML tags (<button>, <main>, <header>, <nav>, <section>).",
+      "Use solid text colors with high contrast."
+    ],
+    "donts": [
+      "Do NOT use gradient text (bg-clip-text text-transparent) on headings or labels.",
+      "Do NOT use emoji in the UI; use Lucide-React SVG icons.",
+      "Do NOT drop garment patterns or revert to generic text-only prompting.",
+      "Do NOT allow horizontal scroll on mobile artboards or responsive mobile layouts.",
+      "Do NOT use font sizes below 14px for body content or below 13px for labels."
+    ]
+  }
+}

@@ -1,0 +1,398 @@
+/* Nutz Try On Embeddable Commercial Widget CSS — Clean Luxury White Theme */
+
+#nutz-modal-overlay,
+#fitverse-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(8px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-out;
+}
+
+#nutz-modal-overlay.open,
+#fitverse-modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.nutz-modal,
+.fitverse-modal {
+    width: 90vw;
+    max-width: 960px;
+    height: 80vh;
+    max-height: 720px;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.2), 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #0f172a;
+}
+
+#nutz-modal-overlay.open .nutz-modal,
+#fitverse-modal-overlay.open .fitverse-modal {
+    transform: translateY(0) scale(1);
+}
+
+/* Modal Header */
+.nutz-modal-header,
+.fitverse-modal-header {
+    height: 62px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.nutz-brand,
+.fitverse-brand {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0f172a;
+}
+
+.nutz-brand span,
+.fitverse-brand span {
+    background: linear-gradient(135deg, #4f46e5, #0284c7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nutz-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    border: 1px solid #c7d2fe;
+}
+
+.nutz-close-btn,
+.fitverse-close-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nutz-close-btn:hover,
+.fitverse-close-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+}
+
+/* Modal Body */
+.nutz-modal-body,
+.fitverse-modal-body {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #f8fafc;
+}
+
+/* 2D Fitting Room Layout */
+.nutz-ai-container,
+.fitverse-ai-container {
+    display: grid;
+    grid-template-columns: 1fr 330px;
+    height: 100%;
+}
+
+.nutz-preview-area,
+.fitverse-preview-area {
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 24px;
+    overflow: hidden;
+}
+
+.nutz-placeholder-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.nutz-placeholder-icons {
+    width: 120px;
+    height: 150px;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    margin-bottom: 16px;
+}
+
+.nutz-placeholder-icons img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.nutz-preview-area img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.nutz-controls-area,
+.fitverse-controls-area {
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.nutz-prod-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nutz-prod-header h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.nutz-badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 9999px;
+}
+
+.nutz-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.nutz-sample-row {
+    display: flex;
+    gap: 8px;
+}
+
+.nutz-sample-pill {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nutz-sample-pill:hover {
+    background: #f1f5f9;
+}
+
+.nutz-sample-pill.active {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #818cf8;
+}
+
+.nutz-speed-select {
+    display: flex;
+    gap: 8px;
+}
+
+.nutz-speed-btn {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nutz-speed-btn.active {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #818cf8;
+}
+
+.nutz-upload-card,
+.fitverse-upload-card {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nutz-upload-card:hover,
+.fitverse-upload-card:hover {
+    border-color: #4f46e5;
+    background: #ffffff;
+}
+
+.nutz-upload-card input[type="file"],
+.fitverse-upload-card input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.nutz-btn-generate,
+.fitverse-btn-generate {
+    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    color: #ffffff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.nutz-btn-generate:hover:not(:disabled),
+.fitverse-btn-generate:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+}
+
+.nutz-btn-generate:disabled,
+.fitverse-btn-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nutz-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.nutz-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+/* Spinner Loader */
+.nutz-loader,
+.fitverse-loader {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    z-index: 20;
+}
+
+.nutz-loader.active,
+.fitverse-loader.active {
+    display: flex;
+}
+
+.nutz-spinner,
+.fitverse-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3.5px solid #e2e8f0;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: nutzSpin 0.9s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes nutzSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* Storefront Trigger Button */
+.nutz-tryon-btn {
+    background: linear-gradient(135deg, #4f46e5, #0284c7);
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+    transition: all 0.2s ease;
+}
+
+.nutz-tryon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.38);
+}

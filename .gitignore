@@ -1,14 +1,64 @@
+# Python & virtualenv
 venv/
+.venv/
 __pycache__/
+*.py[cod]
 .pytest_cache/
-.zen/
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+nutz-replacer/node_modules/
+nutz-replacer/dist/
+nutz-replacer/.vite/
+
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# MLflow & ZenML
 mlruns/
+mlruns.db
+mlflow.db
+mlartifacts/
+.zen/
+
+# Heavy model weights & checkpoints
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.bin
+*.zip
+models/openmoss/
+models/catvton/
+models/insightface/
+models/anomaly_detection/
+
+# Datasets and generated files
+datasets/
 data/
 inputs/
 outputs/
-artifacts/
-*.pt
-*.pth
-*.safetensors
-*.ckpt
-.env
+backups/
+archive/
+densepose_/tmp/
+
+# Logs & Temporary files
+*.log
+.DS_Store
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+
+# Backup & Scratch files in scripts
+scripts/*backup*.tsx
+scripts/*backup*.ts
+scripts/*original*.ts
