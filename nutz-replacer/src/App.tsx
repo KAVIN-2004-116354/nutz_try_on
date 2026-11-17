@@ -10,14 +10,14 @@ import { FeatureSection } from './components/FeatureSection';
 import { GenerationHistory } from './components/GenerationHistory';
 import { Footer } from './components/Footer';
 import { ImageModal } from './components/ImageModal';
-import { MobileTryonArtboard } from './components/MobileTryonArtboard';
 import { 
   CloudStatus, GenerationStatus, ImageInputState, TryonResult, HistoryItem 
 } from './types';
 import { getCloudStatus, executeIntelligentTryon } from './services/api';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS } from './presets';
 import { triggerCelebration } from './services/confetti';
-import { AlertCircle, X, Smartphone, Monitor, Sparkles, Wand2 } from 'lucide-react';
+import { AlertCircle, X, Layers } from 'lucide-react';
+import gsap from 'gsap';
 
 const CURATED_LOOKS = [
   {
@@ -68,14 +68,11 @@ const CURATED_LOOKS = [
 ];
 
 export const App: React.FC = () => {
-  // Default to full studio experience
-  const [viewMode, setViewMode] = useState<'desktop_only' | 'mobile_only'>('desktop_only');
-
   // Cloud & Gateway Status
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
     status: 'online',
-    model: 'FLUX-DEV-012',
-    provider: 'Nutz Railway Cloud',
+    model: 'Atelier-Engine v2.4',
+    provider: 'Nutz Atelier Cloud',
     has_key: true,
   });
 
@@ -98,16 +95,6 @@ export const App: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('shirt');
 
-  // Track the person and garment used in the most recent generation
-  const [lastGeneratedPerson, setLastGeneratedPerson] = useState<string | null>(SAMPLE_PERSONS[0].imageUrl);
-  const [lastGeneratedGarment, setLastGeneratedGarment] = useState<string | null>(SAMPLE_GARMENTS[0].imageUrl);
-
-  const selectionChanged = Boolean(
-    (person.previewUrl !== lastGeneratedPerson || garment.previewUrl !== lastGeneratedGarment) &&
-    person.previewUrl &&
-    garment.previewUrl
-  );
-
   // Generation execution state
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>('ready');
   const [currentStage, setCurrentStage] = useState<number>(1);
@@ -122,7 +109,10 @@ export const App: React.FC = () => {
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
-  // Initial cloud health check & periodic polling
+  // Workspace ref for GSAP entrance
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  // Initial cloud health check
   useEffect(() => {
     let isMounted = true;
     const fetchStatus = async () => {
@@ -130,7 +120,7 @@ export const App: React.FC = () => {
       if (isMounted) setCloudStatus(status);
     };
     fetchStatus();
-    const interval = setInterval(fetchStatus, 20000);
+    const interval = setInterval(fetchStatus, 30000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -152,7 +142,7 @@ export const App: React.FC = () => {
     };
   }, [generationStatus]);
 
-  // Stage progress simulator during generation
+  // Stage progress simulator
   useEffect(() => {
     if (generationStatus === 'processing') {
       const stageTimer1 = setTimeout(() => setCurrentStage(2), 2500);
@@ -169,6 +159,20 @@ export const App: React.FC = () => {
       setCurrentStage(1);
     }
   }, [generationStatus]);
+
+  // GSAP animation on workspace mount
+  useEffect(() => {
+    if (workspaceRef.current) {
+      gsap.from(workspaceRef.current.querySelectorAll('.studio-card'), {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out',
+        delay: 0.2,
+      });
+    }
+  }, []);
 
   const canGenerate = Boolean(person.previewUrl && garment.previewUrl);
 
@@ -209,8 +213,6 @@ export const App: React.FC = () => {
       });
 
       setResult(res);
-      setLastGeneratedPerson(person.previewUrl);
-      setLastGeneratedGarment(garment.previewUrl);
       setGenerationStatus('completed');
 
       // Trigger high-end celebration particle burst
@@ -228,7 +230,7 @@ export const App: React.FC = () => {
           category: selectedCategory,
           resultUrl: res.image_data || res.result_url!,
           latencySec: res.latency_seconds || 16.8,
-          model: res.model_used || 'FLUX-DEV-012',
+          model: res.model_used || 'Atelier-Engine v2.4',
           width: res.width || 1024,
           height: res.height || 1024,
           fileSizeStr: '1.84 MB',
@@ -240,7 +242,7 @@ export const App: React.FC = () => {
       console.error('[Nutz Replacer Generation Error]:', err);
       setGenerationStatus('failed');
       setErrorMessage(
-        err.message || 'Generation failed on FLUX-DEV-012 server. Please verify network and retry.'
+        err.message || 'Generation failed. Please try another combination or retry.'
       );
     }
   };
@@ -270,7 +272,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F4F8] text-[#171717] font-sans antialiased selection:bg-[#F0EDFD] selection:text-[#5B3DF0]">
+    <div className="min-h-screen bg-[#F5F4F8] text-[#171717] font-sans antialiased selection:bg-[#EAE8F2] selection:text-[#171717]">
       {/* 1. Global Navigation Bar */}
       <Navbar
         cloudStatus={cloudStatus}
@@ -281,221 +283,149 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Viewport Control Bar (Discreet switcher for device inspection) */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-[#E8E8EF] px-4 py-2 flex items-center justify-between text-xs">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-            <span className="font-bold text-slate-700">Studio Atelier 2.2</span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-500 font-mono text-[11px]">FLUX Dual-Panel Latent Inpainting</span>
-          </div>
+      {/* 2. Hero Section */}
+      <HeroSection />
 
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F5F4F8] border border-[#E8E8EF]">
-            <button
-              type="button"
-              onClick={() => setViewMode('desktop_only')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'desktop_only'
-                  ? 'bg-[#5B3DF0] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-[#171717]'
-              }`}
-            >
-              <Monitor className="w-3.5 h-3.5" />
-              <span>Full Studio</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('mobile_only')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'mobile_only'
-                  ? 'bg-[#5B3DF0] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-[#171717]'
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Mobile Viewport (390px)</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {viewMode === 'mobile_only' ? (
-        /* Mobile Artboard Frame (Centered preview) */
-        <div className="py-10 px-4 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] bg-[#EAE8F2]">
-          <div className="flex items-center justify-between mb-3 px-2 w-[390px]">
-            <div className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-[#5B3DF0]" />
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
-                Mobile Viewport Artboard
-              </span>
+      {/* 3. Virtual Try-On Studio Workspace */}
+      <section id="tryon-workspace" className="py-16 scroll-mt-20">
+        <div ref={workspaceRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Workspace Header & Curated Quick Looks */}
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#171717] tracking-tight">
+                Virtual Dressing Room
+              </h2>
+              <p className="text-sm text-slate-500 mt-1 max-w-xl font-normal">
+                Select a model portrait on the left and choose a garment to preview how the outfit drapes onto your posture.
+              </p>
             </div>
-            <span className="text-[11px] font-mono text-[#5B3DF0] bg-[#F0EDFD] px-2.5 py-0.5 rounded-md border border-[#5B3DF0]/30 font-bold">
-              390 × 844 px
-            </span>
-          </div>
 
-          <MobileTryonArtboard
-            person={person}
-            setPerson={setPerson}
-            garment={garment}
-            setGarment={setGarment}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            result={result}
-            generationStatus={generationStatus}
-            canGenerate={canGenerate}
-            onGenerate={handleGenerate}
-            onOpenZoom={() => setIsZoomOpen(true)}
-            selectionChanged={selectionChanged}
-          />
-        </div>
-      ) : (
-        /* Full Desktop Master Studio */
-        <>
-          {/* 2. Hero Section */}
-          <HeroSection />
-
-          {/* 3. Virtual Try-On Workspace */}
-          <section id="tryon-workspace" className="py-14 scroll-mt-24">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {/* Workspace Header & Curated Quick Looks */}
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-[#5B3DF0] bg-[#F0EDFD] border border-[#5B3DF0]/20 mb-2">
-                    <Sparkles className="w-3.5 h-3.5 text-[#5B3DF0]" />
-                    <span>Interactive Atelier Studio</span>
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold text-[#171717] tracking-tight">
-                    Dual-Panel Virtual Try-On
-                  </h2>
-                  <p className="text-sm text-slate-500 mt-1 max-w-xl">
-                    Select a target model and reference garment to trigger photorealistic spatial diffusion synthesis.
-                  </p>
-                </div>
-
-                {/* 1-Click Curated Showcase Looks */}
-                <div className="p-3 rounded-2xl bg-white border border-[#E8E8EF] shadow-card">
-                  <div className="flex items-center gap-2 mb-2 text-xs font-extrabold text-[#171717]">
-                    <Wand2 className="w-3.5 h-3.5 text-[#5B3DF0]" />
-                    <span>Instant Curated Looks:</span>
-                  </div>
-                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                    {CURATED_LOOKS.map((look) => (
-                      <button
-                        key={look.id}
-                        type="button"
-                        onClick={() => handleApplyCuratedLook(look)}
-                        disabled={generationStatus === 'processing'}
-                        className="group flex-shrink-0 flex items-center gap-2 p-1.5 pr-3 rounded-xl border border-[#E8E8EF] hover:border-[#5B3DF0] bg-[#F9F9FC] hover:bg-white transition-all duration-300 cursor-pointer active:scale-95 shadow-sm"
-                      >
-                        <img
-                          src={look.thumb}
-                          alt={look.title}
-                          className="w-8 h-8 rounded-lg object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <div className="text-left">
-                          <span className="block text-[11px] font-bold text-[#171717] group-hover:text-[#5B3DF0] transition-colors leading-tight">
-                            {look.title}
-                          </span>
-                          <span className="block text-[9px] text-slate-400 font-semibold">
-                            {look.tag}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            {/* Curated Showcase Wardrobe Rack */}
+            <div id="curated-wardrobe" className="p-3.5 rounded-3xl bg-white border border-[#E8E8EF] shadow-card">
+              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-[#171717]">
+                <Layers className="w-3.5 h-3.5 text-slate-700" />
+                <span>Curated Wardrobe:</span>
               </div>
-
-              {errorMessage && (
-                <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between shadow-sm animate-fadeIn">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-[#DC2626] flex-shrink-0" />
-                    <span className="font-semibold">{errorMessage}</span>
-                  </div>
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                {CURATED_LOOKS.map((look) => (
                   <button
+                    key={look.id}
                     type="button"
-                    onClick={() => setErrorMessage(null)}
-                    aria-label="Dismiss error notification"
-                    className="text-red-500 hover:text-red-800 transition p-1 rounded-lg"
+                    onClick={() => handleApplyCuratedLook(look)}
+                    disabled={generationStatus === 'processing'}
+                    className="group flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border border-[#E8E8EF] hover:border-[#171717] bg-[#F9F9FC] hover:bg-white transition-all duration-300 cursor-pointer active:scale-95 shadow-sm"
                   >
-                    <X className="w-4 h-4" />
+                    <img
+                      src={look.thumb}
+                      alt={look.title}
+                      className="w-8 h-8 rounded-xl object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="text-left">
+                      <span className="block text-[11px] font-bold text-[#171717] leading-tight">
+                        {look.title}
+                      </span>
+                      <span className="block text-[9px] text-slate-400 font-medium">
+                        {look.tag}
+                      </span>
+                    </div>
                   </button>
-                </div>
-              )}
-
-              {/* Main Studio Canvas Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* Left Side: Inputs (Model + Bridge + Garment) */}
-                <div className="lg:col-span-6 space-y-4">
-                  <PersonUploadCard
-                    person={person}
-                    setPerson={setPerson}
-                    disabled={generationStatus === 'processing'}
-                    onError={setErrorMessage}
-                  />
-
-                  <TryonBridge
-                    hasPerson={Boolean(person.previewUrl)}
-                    hasGarment={Boolean(garment.previewUrl)}
-                  />
-
-                  <GarmentUploadCard
-                    garment={garment}
-                    setGarment={setGarment}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    disabled={generationStatus === 'processing'}
-                    onError={setErrorMessage}
-                  />
-                </div>
-
-                {/* Right Side: Sticky Diffusion Master Stage */}
-                <div className="lg:col-span-6 sticky top-28">
-                  <ResultStage
-                    person={person}
-                    garment={garment}
-                    selectedCategory={selectedCategory}
-                    result={result}
-                    generationStatus={generationStatus}
-                    currentStage={currentStage}
-                    elapsedSec={elapsedSec}
-                    canGenerate={canGenerate}
-                    onGenerate={handleGenerate}
-                    onReset={handleReset}
-                    onOpenZoom={() => setIsZoomOpen(true)}
-                  />
-                </div>
+                ))}
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* 4. How It Works Section */}
-          <HowItWorksSection />
+          {errorMessage && (
+            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between shadow-sm animate-fadeIn">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-[#DC2626] flex-shrink-0" />
+                <span className="font-semibold">{errorMessage}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                aria-label="Dismiss error notification"
+                className="text-red-500 hover:text-red-800 transition p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
-          {/* 5. Features Section */}
-          <FeatureSection />
+          {/* Main Studio Canvas Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Inputs */}
+            <div className="lg:col-span-6 space-y-4">
+              <div className="studio-card">
+                <PersonUploadCard
+                  person={person}
+                  setPerson={setPerson}
+                  disabled={generationStatus === 'processing'}
+                  onError={setErrorMessage}
+                />
+              </div>
 
-          {/* 6. Recent Creations Gallery */}
-          <GenerationHistory
-            history={history}
-            onSelectResult={handleSelectHistoryLook}
-            onClearHistory={() => setHistory([])}
-          />
+              <div className="studio-card">
+                <TryonBridge
+                  hasPerson={Boolean(person.previewUrl)}
+                  hasGarment={Boolean(garment.previewUrl)}
+                />
+              </div>
 
-          {/* 7. Footer */}
-          <Footer />
-        </>
-      )}
+              <div className="studio-card">
+                <GarmentUploadCard
+                  garment={garment}
+                  setGarment={setGarment}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  disabled={generationStatus === 'processing'}
+                  onError={setErrorMessage}
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Mirror Canvas */}
+            <div className="lg:col-span-6 sticky top-28 studio-card">
+              <ResultStage
+                person={person}
+                garment={garment}
+                selectedCategory={selectedCategory}
+                result={result}
+                generationStatus={generationStatus}
+                currentStage={currentStage}
+                elapsedSec={elapsedSec}
+                canGenerate={canGenerate}
+                onGenerate={handleGenerate}
+                onReset={handleReset}
+                onOpenZoom={() => setIsZoomOpen(true)}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Craft & Fit Process Section */}
+      <HowItWorksSection />
+
+      {/* 5. Production Standards Section */}
+      <FeatureSection />
+
+      {/* 6. Recent Lookbook Gallery */}
+      <GenerationHistory
+        history={history}
+        onSelectResult={handleSelectHistoryLook}
+        onClearHistory={() => setHistory([])}
+      />
+
+      {/* 7. Footer */}
+      <Footer />
 
       {/* Full-Screen HD Zoom Modal */}
       <ImageModal
         isOpen={isZoomOpen}
         onClose={() => setIsZoomOpen(false)}
         imageUrl={result?.image_data || result?.result_url || ''}
-        title="1024 × 1024 High-Definition Virtual Try-On Look"
-        resolution="1024 × 1024 HD"
+        title="High-Definition Garment Drape & Fitting Preview"
+        resolution="High-Resolution HD"
         fileSizeStr="1.84 MB"
       />
     </div>

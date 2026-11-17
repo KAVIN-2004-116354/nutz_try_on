@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, RefreshCw, Trash2, CheckCircle2, ShieldCheck, UserCheck } from 'lucide-react';
+import { RefreshCw, Trash2, CheckCircle2, UserCheck, Camera } from 'lucide-react';
 import { ImageInputState, SamplePreset } from '../types';
 import { SAMPLE_PERSONS } from '../presets';
 
@@ -88,28 +88,25 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-[#E8E8EF] shadow-card p-6 flex flex-col justify-between transition-all duration-400 hover:border-[#5B3DF0]/30 hover:shadow-elevated">
+    <div className="bg-white rounded-3xl border border-[#E8E8EF] shadow-card p-6 flex flex-col justify-between transition-all duration-300 hover:border-[#171717]/20 hover:shadow-xl">
       <div>
-        {/* Header */}
+        {/* Header - Clean Human Fashion */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-xl bg-[#F0EDFD] text-[#5B3DF0] font-extrabold text-xs flex items-center justify-center border border-[#5B3DF0]/20 shadow-sm">
-              01
-            </span>
-            <div>
-              <h3 className="text-base font-extrabold text-[#171717] flex items-center gap-2">
-                <span>Model & Portrait</span>
-                {person.previewUrl && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#16A34A] border border-emerald-200">
-                    <UserCheck className="w-3 h-3" />
-                    Locked
-                  </span>
-                )}
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-[#171717]">
+                Model & Pose
               </h3>
-              <p className="text-[12px] text-slate-500 font-medium">
-                Identity, facial features and body posture remain 100% intact
-              </p>
+              {person.previewUrl && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#16A34A] border border-emerald-200">
+                  <UserCheck className="w-3 h-3" />
+                  Locked
+                </span>
+              )}
             </div>
+            <p className="text-[12px] text-slate-500 font-medium mt-0.5">
+              Select a studio portrait or upload your photo
+            </p>
           </div>
 
           {person.previewUrl && (
@@ -125,10 +122,10 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
           )}
         </div>
 
-        {/* 1-Click Studio Models Carousel */}
+        {/* Studio Models Carousel */}
         <div className="mb-4">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-            Quick Studio Models
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+            Studio Model Roster
           </span>
           <div className="flex items-center gap-2.5 overflow-x-auto pb-1 no-scrollbar">
             {SAMPLE_PERSONS.map((sample) => {
@@ -139,31 +136,29 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
                   type="button"
                   onClick={() => selectPreset(sample)}
                   disabled={disabled}
-                  className={`group relative flex-shrink-0 flex items-center gap-2 p-1.5 pr-3 rounded-2xl border transition-all duration-300 text-left cursor-pointer ${
+                  className={`group relative flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer ${
                     isSelected
-                      ? 'bg-[#F0EDFD] border-[#5B3DF0] shadow-sm ring-2 ring-[#5B3DF0]/20 scale-[1.02]'
-                      : 'bg-[#F9F9FC] border-[#E8E8EF] hover:border-slate-300 hover:bg-white'
+                      ? 'bg-[#171717] border-[#171717] text-white shadow-md scale-[1.02]'
+                      : 'bg-[#F9F9FC] border-[#E8E8EF] text-[#171717] hover:border-slate-300 hover:bg-white'
                   }`}
                 >
-                  <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-[#E8E8EF] flex-shrink-0">
+                  <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-black/10 flex-shrink-0 bg-white">
                     <img
                       src={sample.imageUrl}
                       alt={sample.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     {isSelected && (
-                      <span className="absolute inset-0 bg-[#5B3DF0]/20 flex items-center justify-center">
+                      <span className="absolute inset-0 bg-black/30 flex items-center justify-center">
                         <CheckCircle2 className="w-4 h-4 text-white drop-shadow" />
                       </span>
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-[11px] font-bold truncate max-w-[85px] ${
-                      isSelected ? 'text-[#5B3DF0]' : 'text-[#171717]'
-                    }`}>
+                    <span className="text-[11px] font-bold truncate max-w-[85px] leading-tight">
                       {sample.name.split(' ')[0]}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-medium">
+                    <span className={`text-[9px] font-medium ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
                       {sample.gender === 'women' ? 'Female' : 'Male'}
                     </span>
                   </div>
@@ -184,8 +179,8 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
               ? 'border border-[#E8E8EF] bg-slate-900 group cursor-default'
               : `border-2 border-dashed flex flex-col items-center justify-center p-8 cursor-pointer ${
                   isDragging
-                    ? 'border-[#5B3DF0] bg-[#F0EDFD]/50 scale-[1.01]'
-                    : 'border-slate-200 hover:border-[#5B3DF0]/50 hover:bg-[#F9F9FC]'
+                    ? 'border-[#171717] bg-slate-100 scale-[1.01]'
+                    : 'border-slate-200 hover:border-slate-400 hover:bg-[#F9F9FC]'
                 }`
           }`}
           style={{ minHeight: person.previewUrl ? '340px' : '220px' }}
@@ -207,15 +202,10 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
               />
 
-              {/* Identity Protection Overlay Tag */}
+              {/* Status Tag */}
               <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-white/40 shadow-sm flex items-center gap-1.5 text-xs font-bold text-[#171717]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />
-                <span>Identity Guard Active</span>
-              </div>
-
-              {/* Resolution Tag */}
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-mono font-bold text-white">
-                {person.resolution || 'HD Portrait'}
+                <span className="w-2 h-2 rounded-full bg-[#16A34A]" />
+                <span>Pose & Identity Locked</span>
               </div>
 
               {/* Bottom bar with action */}
@@ -233,20 +223,20 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
                   className="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white text-white hover:text-[#171717] text-xs font-bold backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Replace</span>
+                  <span>Replace Photo</span>
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#F0EDFD] text-[#5B3DF0] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm">
-                <Upload className="w-6 h-6 animate-bounce" style={{ animationDuration: '2.5s' }} />
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F4F8] text-[#171717] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm border border-[#E8E8EF]">
+                <Camera className="w-6 h-6 stroke-[1.8]" />
               </div>
               <p className="text-sm font-extrabold text-[#171717] mb-1">
-                Drop your photo here or <span className="text-[#5B3DF0] underline">browse</span>
+                Upload your portrait or <span className="underline">browse files</span>
               </p>
               <p className="text-xs text-slate-400 font-medium max-w-xs">
-                Supports front-facing portraits in JPG, PNG, WEBP (up to 20MB)
+                Front-facing portraits in JPG, PNG, WEBP (up to 20MB)
               </p>
             </div>
           )}

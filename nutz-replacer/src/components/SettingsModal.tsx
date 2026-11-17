@@ -34,12 +34,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ cloudStatus, onClo
           </h4>
           <div className="bg-white/[0.03] rounded-xl p-4 border border-white/10 space-y-2 font-mono">
             <div className="flex justify-between">
-              <span className="text-slate-400">Active Diffusion Model:</span>
-              <strong className="text-amber-400">FLUX-DEV-012 (Exclusive Cloud)</strong>
+              <span className="text-slate-400">Active Fitting Engine:</span>
+              <strong className="text-white">Precision Tailoring v2.4 (Atelier Cloud)</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Inference Provider:</span>
-              <span className="text-slate-200">Nutz Railway Cloud GPU</span>
+              <span className="text-slate-200">Nutz Dedicated Cloud GPU</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Photorealistic Target:</span>
@@ -47,7 +47,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ cloudStatus, onClo
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Anatomical Identity Guard:</span>
-              <span className="text-emerald-400 font-bold">MediaPipe Pose &amp; Skin Lock</span>
+              <span className="text-emerald-400 font-bold">Pose, Silhouette &amp; Complexion Lock</span>
             </div>
           </div>
         </div>
