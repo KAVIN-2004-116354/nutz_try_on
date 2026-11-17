@@ -21,11 +21,11 @@ nutz-replacer/.vite/
 *.key
 
 # MLflow & ZenML
-mlruns/
-mlruns.db
-mlflow.db
-mlartifacts/
-.zen/
+/mlruns/
+/mlruns.db
+/mlflow.db
+/mlartifacts/
+/.zen/
 
 # Heavy model weights & checkpoints
 *.safetensors
@@ -35,18 +35,19 @@ mlartifacts/
 *.onnx
 *.bin
 *.zip
-models/openmoss/
-models/catvton/
-models/insightface/
-models/anomaly_detection/
+/models/openmoss/
+/models/catvton/
+/models/insightface/
+/models/anomaly_detection/
 
-# Datasets and generated files
-datasets/
-data/
-inputs/
-outputs/
-backups/
-archive/
+# Datasets and generated files (root level only)
+/datasets/
+/data/
+/inputs/
+/outputs/
+/backups/
+/archive/
+/experiments/lora_outputs/
 densepose_/tmp/
 
 # Logs & Temporary files
