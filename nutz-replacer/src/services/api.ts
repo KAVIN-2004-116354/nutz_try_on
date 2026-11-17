@@ -100,13 +100,11 @@ export async function executeFluxTryon(params: GenerateTryonParams): Promise<Try
     formData.append('category', params.category);
   }
 
-  // 4. Identity-Preserving Fashion Instruction
-  let promptText = params.customPrompt?.trim();
-  if (!promptText) {
-    const garmentDesc = params.garmentName?.trim() || 'fashion designer outfit';
-    promptText = `Full-length high-fashion portrait: virtual try-on dressing the model in ${garmentDesc}. Strictly preserve model facial identity, facial features, skin tone, natural hair, body proportions, and pose. Photorealistic, 8k resolution, pristine studio illumination, flawless fabric texture.`;
+  // 4. Optional Custom Styling Instruction
+  const promptText = params.customPrompt?.trim();
+  if (promptText) {
+    formData.append('prompt', promptText);
   }
-  formData.append('prompt', promptText);
   if (params.garmentName) {
     formData.append('garment_desc', params.garmentName);
   }

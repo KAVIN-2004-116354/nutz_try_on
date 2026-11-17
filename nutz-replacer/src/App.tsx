@@ -160,7 +160,7 @@ export const App: React.FC = () => {
         personImage: person.file || person.previewUrl,
         garmentImage: garment.file || garment.previewUrl,
         category: selectedCategory,
-        mode: 'pure_flux',
+        mode: 'auto',
       });
 
       clearTimeout(s2);
@@ -349,10 +349,7 @@ export const App: React.FC = () => {
     <div className="min-h-screen bg-[#EAE8F2] text-[#171717] font-sans antialiased">
       {/* Top Designer Canvas Toolbar */}
       <header className="bg-white/95 backdrop-blur-md border-b border-[#D5D3E5] sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between shadow-subtle">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#171717] flex items-center justify-center p-1">
-            <img src="/nutz_logo_white.png" alt="Nutz Logo" className="w-full h-full object-contain" />
-          </div>
+        <div className="flex items-center">
           <div>
             <span className="font-extrabold text-[15px] text-[#171717] tracking-tight">
               NUTZ REPLACER <span className="text-[#5B3DF0]">CANVAS</span>

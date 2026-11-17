@@ -5,18 +5,8 @@ export const Footer: React.FC = () => {
     <footer className="bg-white border-t border-[#E8E8EF] py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-[#E8E8EF]">
-          {/* Logo & Tagline */}
-          <div className="flex items-center gap-3.5">
-            <div className="h-9 px-2 py-1 rounded-xl bg-[#171717] flex items-center justify-center border border-black/10">
-              <img
-                src="/nutz_logo_white.png"
-                alt="NUTZ Logo"
-                className="h-5 w-auto object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/nutz_logo.jpg';
-                }}
-              />
-            </div>
+          {/* Brand & Tagline */}
+          <div className="flex items-center">
             <div>
               <span className="font-extrabold text-[#171717] text-base tracking-tight font-sans">
                 NUTZ <span className="text-[#5B3DF0]">REPLACER</span>

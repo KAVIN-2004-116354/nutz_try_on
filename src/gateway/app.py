@@ -336,20 +336,25 @@ async def _execute_tryon_request(request: Request, forced_engine: Optional[str] 
                 "sample_ethnic_anarkali_model": "traditional royal emerald green bridal anarkali gown",
             }
             garment_desc = custom_prompt or ""
-            if not garment_desc and isinstance(garment_raw, str):
+            # Explicitly normalize and bind category
+            canonical_cat = normalize_category(category) if category else None
+            if not canonical_cat and isinstance(garment_raw, str):
                 for k, v in garment_hints.items():
                     if k in garment_raw.lower():
+                        canonical_cat = normalize_category(k)
                         garment_desc = v
                         break
-            if not garment_desc:
-                garment_desc = f"{'traditional Indian ethnic' if clean_domain == 'indian_ethnic' else 'modern Western fashion'} {category or 'designer clothing'}"
+            if not canonical_cat:
+                canonical_cat = "shirt" if clean_domain == "western" else "kurta"
 
-            print(f"[Gateway] Executing Try-On exclusively via FLUX-DEV-012 Cloud Model (garment: {garment_desc})")
+            print(f"[Gateway] Executing Try-On exclusively via FLUX-DEV-012 Cloud Model (category: {canonical_cat}, garment: {garment_desc})")
             flux_res = run_flux_tryon(
                 person_img=person_pil,
                 garment_img=garment_pil,
                 garment_desc=garment_desc,
                 custom_prompt=custom_prompt,
+                category=canonical_cat,
+                use_canvas_conditioning=garment_pil is not None,
             )
             result = {
                 "status": "success",
@@ -624,14 +629,16 @@ async def generate_intelligent_tryon(request: Request):
             person_img=person_pil,
             garment_name=garment_filename
         )
-        if custom_prompt.strip():
-            detected_type = grok_res.get("garment_analysis", {}).get("garment_type", "")
-            canonical_cat = normalize_category(custom_prompt or detected_type or "t_shirt")
-            grok_res["generation_prompt"] = build_flux_category_prompt(
-                canonical_cat,
-                garment_attributes=grok_res.get("garment_analysis"),
-                user_prompt=custom_prompt.strip()
-            )
+        detected_type = grok_res.get("garment_analysis", {}).get("garment_type", "")
+        # Prioritize explicitly passed category over heuristic prompt or detected label
+        canonical_cat = normalize_category(category or detected_type or "t_shirt")
+        
+        styling_note = custom_prompt.strip() if custom_prompt and custom_prompt.strip() else None
+        grok_res["generation_prompt"] = build_flux_category_prompt(
+            canonical_cat,
+            garment_attributes=grok_res.get("garment_analysis"),
+            user_prompt=styling_note
+        )
 
     garment_analysis = grok_res.get("garment_analysis", {})
     replacement_plan = grok_res.get("replacement_plan", {})
@@ -648,14 +655,15 @@ async def generate_intelligent_tryon(request: Request):
     seg_metrics = seg_res["metrics"]
 
     # Step 4: FLUX-DEV-012 Cloud Inpainting with Dual-Panel Canvas Conditioning
+    # Ensure visual reference conditioning is active whenever a garment image is provided
     try:
         flux_res = run_flux_tryon(
             person_img=person_pil,
             garment_img=garment_pil,
             custom_prompt=generation_prompt,
             mask_img=mask_img,
-            category=canonical_cat if 'canonical_cat' in locals() else None,
-            use_canvas_conditioning=not is_pure_flux and garment_pil is not None,
+            category=canonical_cat,
+            use_canvas_conditioning=garment_pil is not None,
         )
         tryon_img = flux_res["tryon_image"]
     except Exception as f_err:

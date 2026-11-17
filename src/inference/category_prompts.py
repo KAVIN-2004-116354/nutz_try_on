@@ -6,6 +6,7 @@ Implements the official 17-category virtual try-on prompt architecture:
 - Final Global Priority Order and Integrity Enforcement
 """
 
+import re
 from typing import Dict, Any, Optional, Tuple
 
 UNIVERSAL_IDENTITY_RULES = (
@@ -336,55 +337,59 @@ CATEGORY_CONFIGS: Dict[str, Dict[str, Any]] = {
 }
 
 
+# Strict category match rules with regex word boundaries to prevent substring collisions
+# (e.g. 'dressing' or 'addressing' will NEVER match 'dress')
+_CATEGORY_WORD_PATTERNS = [
+    ('polo_t_shirt', [r'\bpolo(?:\s*t[\s_-]*shirt|\s+shirt)?\b', r'\bcollared\s+tee\b', r'\bgolf\s+shirt\b']),
+    ('inner_vest', [r'\binner\s+vest\b', r'\bbaniyan\b', r'\bundershirt\b', r'\btank\s+top\b', r'\bsinglet\b', r'\bvest\b']),
+    ('t_shirt', [r'\bt[\s_-]*shirt\b', r'\btee\b', r'\bcrewneck\b', r'\bround\s+neck\b']),
+    ('waistcoat', [r'\bwaistcoat\b', r'\bnehru\s+jacket\b', r'\bbandi\b']),
+    ('blazer', [r'\bblazer\b', r'\bsuit\s+jacket\b', r'\btuxedo\b', r'\bsuit\b', r'\bcoat\b']),
+    ('sherwani', [r'\bsherwani\b']),
+    ('achkan', [r'\bachkan\b', r'\bangrakha\b']),
+    ('kurta', [r'\bkurta\b', r'\bkurti\b', r'\bpanjabi\b']),
+    ('saree', [r'\bsaree\b', r'\bsari\b']),
+    ('lehenga', [r'\blehenga\b', r'\bghagra\b', r'\bchaniya\b']),
+    ('dhoti', [r'\bdhoti\b', r'\bveshti\b', r'\bmundu\b', r'\bpanche\b']),
+    ('western_dress', [r'\bwestern\s+dress\b', r'\bevening\s+(?:dress|gown)\b', r'\bmaxi\s+dress\b', r'\bcocktail\s+dress\b', r'\banarkali\b', r'\bdress\b', r'\bgown\b', r'\bmaxi\b', r'\bfrock\b']),
+    ('formal_trousers', [r'\bformal\s+trousers\b', r'\btrousers?\b', r'\bslacks\b', r'\bchinos?\b', r'\bdress\s+pants\b']),
+    ('shorts', [r'\bshorts?\b', r'\bbermuda\b']),
+    ('jeans', [r'\bjeans\b', r'\bdenim\b']),
+    ('hoodie', [r'\bhoodie\b', r'\bsweatshirt\b']),
+    ('shirt', [r'\bbutton[\s_-]*(?:down|up)\b', r'\boxford(?:\s+shirt)?\b', r'\bformal\s+shirt\b', r'\bdress\s+shirt\b', r'\bshirt\b']),
+]
+
+
 def normalize_category(category_or_name: str) -> str:
-    """Normalizes any freeform garment name or category string into one of the 17 canonical IDs."""
-    if not category_or_name:
+    """
+    Normalizes any garment key, name, or label into one of the 17 canonical IDs.
+    Uses strict word boundaries and exact matching to avoid false positive substring matches
+    (e.g., prevents 'dressing', 'addressing', or 'dressmaker' from triggering Western Dress).
+    """
+    if not category_or_name or not isinstance(category_or_name, str):
         return "t_shirt"
-    cleaned = category_or_name.lower().replace("-", " ").replace("_", " ").strip()
 
-    # Exact key match
-    if category_or_name in CATEGORY_CONFIGS:
-        return category_or_name
+    cleaned_key = category_or_name.strip().lower().replace("-", "_").replace(" ", "_")
 
-    # Alias matching
+    # 1. Exact canonical key match
+    if cleaned_key in CATEGORY_CONFIGS:
+        return cleaned_key
+
+    # 2. Exact match against display names
+    for cat_id, cfg in CATEGORY_CONFIGS.items():
+        if category_or_name.strip().lower() == cfg["name"].lower():
+            return cat_id
+
+    # 3. Exact alias match (full string comparison)
     for cat_id, cfg in CATEGORY_CONFIGS.items():
         for alias in cfg["aliases"]:
-            if alias in cleaned:
+            if category_or_name.strip().lower() == alias.lower():
                 return cat_id
 
-    # Fallback heuristics
-    if any(w in cleaned for w in ["anarkali", "gown", "dress", "maxi", "frock"]):
-        return "western_dress"
-    if any(w in cleaned for w in ["saree", "sari"]):
-        return "saree"
-    if any(w in cleaned for w in ["lehenga", "ghagra", "chaniya"]):
-        return "lehenga"
-    if any(w in cleaned for w in ["kurta", "kurti"]):
-        return "kurta"
-    if any(w in cleaned for w in ["sherwani"]):
-        return "sherwani"
-    if any(w in cleaned for w in ["achkan", "angrakha"]):
-        return "achkan"
-    if any(w in cleaned for w in ["blazer", "suit", "jacket", "coat", "tuxedo"]):
-        return "blazer"
-    if any(w in cleaned for w in ["vest", "baniyan", "tank"]):
-        return "inner_vest"
-    if any(w in cleaned for w in ["polo"]):
-        return "polo_t_shirt"
-    if any(w in cleaned for w in ["shirt", "oxford"]):
-        return "shirt"
-    if any(w in cleaned for w in ["hoodie", "sweatshirt"]):
-        return "hoodie"
-    if any(w in cleaned for w in ["waistcoat", "nehru"]):
-        return "waistcoat"
-    if any(w in cleaned for w in ["jean", "denim"]):
-        return "jeans"
-    if any(w in cleaned for w in ["trouser", "pant", "chino", "slack"]):
-        return "formal_trousers"
-    if any(w in cleaned for w in ["short"]):
-        return "shorts"
-    if any(w in cleaned for w in ["dhoti", "veshti", "mundu"]):
-        return "dhoti"
+    # 4. Strict Regex Word-Boundary Pattern Matching (Compound phrases first)
+    for cat_id, patterns in _CATEGORY_WORD_PATTERNS:
+        if any(re.search(pat, category_or_name, re.IGNORECASE) for pat in patterns):
+            return cat_id
 
     return "t_shirt"
 

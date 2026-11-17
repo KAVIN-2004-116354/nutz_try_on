@@ -141,17 +141,7 @@ export const MobileTryonArtboard: React.FC<MobileTryonArtboardProps> = ({
 
       {/* 1. Compact Header */}
       <header className="h-14 bg-white/95 backdrop-blur-md border-b border-[#E8E8EF] flex items-center justify-between px-4 flex-shrink-0 z-30">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#171717] flex items-center justify-center p-1">
-            <img
-              src="/nutz_logo_white.png"
-              alt="Nutz Logo"
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/nutz_logo.jpg';
-              }}
-            />
-          </div>
+        <div className="flex items-center">
           <span className="text-[17px] font-extrabold tracking-tight text-[#171717]">
             Nutz Replacer
           </span>

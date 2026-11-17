@@ -22,12 +22,14 @@ try:
         normalize_category,
         get_category_config,
         build_flux_category_prompt,
+        FINAL_GLOBAL_INSTRUCTIONS,
     )
 except ImportError:
     from inference.category_prompts import (
         normalize_category,
         get_category_config,
         build_flux_category_prompt,
+        FINAL_GLOBAL_INSTRUCTIONS,
     )
 
 logger = logging.getLogger("nutz.cloud_generator")
@@ -328,17 +330,28 @@ def build_spatial_canvas_prompt(
     """
     Constructs the spatial dual-panel reference prompt for FLUX inpainting.
     Instructs the Diffusion Transformer to transfer visual features from the right panel onto the left panel.
+    Strictly preserves:
+    1. Universal Strict Rules (Identity, Anatomy, Reference Fidelity)
+    2. Category-Specific Transformation Directive (1 of 17)
+    3. User Styling Directives (if provided)
+    4. Final Global Priority Instructions
     """
     canonical_cat = normalize_category(category or "shirt")
     cat_cfg = get_category_config(canonical_cat)
     cat_name = cat_cfg.get("name", "Garment").upper()
     cat_directive = cat_cfg.get("directive", "")
 
+    # Extract user styling instruction only if clean and not generic
     optional_user_note = ""
     if user_prompt and user_prompt.strip():
-        optional_user_note = f"\nADDITIONAL STYLING DIRECTIVE:\n{user_prompt.strip()}\n"
+        u_text = user_prompt.strip()
+        # Filter out pre-compiled prompt dumps or generic fallback sentences
+        if not u_text.startswith("FLUX VIRTUAL TRY-ON") and "dressing the model in fashion designer outfit" not in u_text:
+            optional_user_note = f"\nADDITIONAL STYLING DIRECTIVE:\n{u_text}\n"
     elif garment_desc and garment_desc.strip():
-        optional_user_note = f"\nGARMENT ATTRIBUTE GUIDANCE:\n{garment_desc.strip()}\n"
+        g_desc = garment_desc.strip()
+        if len(g_desc) < 120 and "fashion designer outfit" not in g_desc:
+            optional_user_note = f"\nGARMENT ATTRIBUTE GUIDANCE:\n{g_desc}\n"
 
     prompt = (
         f"FLUX VIRTUAL TRY-ON — {cat_name} DUAL-PANEL SPATIAL REFERENCE TRANSFORMATION\n\n"
@@ -354,12 +367,13 @@ def build_spatial_canvas_prompt(
         f"- Faithfully replicate logos, collar design, button plackets, and sleeve construction from the right panel.\n"
         f"- Adapt garment geometry naturally to the target person's existing pose with realistic fabric draping, folds, and contact shadows.\n\n"
         f"{cat_directive}\n"
-        f"{optional_user_note}"
+        f"{optional_user_note}\n"
         f"IDENTITY & ANATOMY PRESERVATION (STRICT):\n"
         f"- Strictly preserve the target person's face, facial features, eyes, nose, lips, and expression.\n"
         f"- Strictly preserve hairstyle, hairline, facial hair, skin tone, and ethnicity.\n"
         f"- Strictly preserve original shoulder width, chest, waist, arms, hands, body proportions, and pose.\n"
         f"- Do not modify unmasked background or unrelated clothing.\n\n"
+        f"{FINAL_GLOBAL_INSTRUCTIONS}\n\n"
         f"Photorealistic commercial fashion photography, pristine studio lighting, flawless edge blending, 8k resolution masterpiece."
     )
     return prompt
@@ -388,6 +402,15 @@ def run_flux_tryon(
     canvas_preview: Optional[Image.Image] = None
     canvas_mask_preview: Optional[Image.Image] = None
 
+    # Resolve clean canonical category without string pollution
+    clean_cat = None
+    if category and isinstance(category, str):
+        clean_cat = normalize_category(category)
+    elif garment_desc and isinstance(garment_desc, str) and len(garment_desc) < 60:
+        clean_cat = normalize_category(garment_desc)
+    else:
+        clean_cat = "shirt"
+
     if garment_img is not None and use_canvas_conditioning:
         # Dual-Panel Spatial Reference Conditioning Workflow
         logger.info("Assembling dual-panel try-on canvas for FLUX visual reference conditioning...")
@@ -401,9 +424,9 @@ def run_flux_tryon(
         canvas_preview = canvas
         canvas_mask_preview = canvas_mask
 
-        # Formulate spatial conditioning prompt
+        # Formulate spatial conditioning prompt with explicit category
         prompt = build_spatial_canvas_prompt(
-            category=category or custom_prompt,
+            category=clean_cat,
             user_prompt=custom_prompt,
             garment_desc=garment_desc,
         )
@@ -425,25 +448,20 @@ def run_flux_tryon(
             logger.info(f"Successfully extracted dressed person: {tryon_img.size}")
         except Exception as e:
             logger.warning(f"Dual-panel canvas edit failed ({e}), falling back to direct person edit...")
+            # Fallback Path 1: Preserve category-specific prompt and universal rules
             tryon_img = edit_cloud_image(
                 image=person_img,
-                prompt=custom_prompt or prompt,
+                prompt=prompt,
                 mask=mask_img,
                 model=DEFAULT_MODEL,
                 timeout=timeout,
             )
     else:
         # Single-image text-guided inpainting (Pure FLUX mode)
-        if custom_prompt and custom_prompt.strip():
-            prompt = custom_prompt.strip()
-        else:
-            desc = garment_desc.strip() if garment_desc else "luxury fashion apparel"
-            prompt = (
-                f"Full-length high-fashion photography portrait: seamless virtual try-on, "
-                f"change outfit to {desc}, perfectly fitted and styled, "
-                f"strictly preserve model facial identity, ethnicity, expression, natural skin texture, hair, and body posture, "
-                f"pristine studio lighting, 8k resolution, photorealistic masterpiece."
-            )
+        prompt = build_flux_category_prompt(
+            category_or_name=clean_cat,
+            user_prompt=custom_prompt if (custom_prompt and not custom_prompt.startswith("FLUX VIRTUAL TRY-ON")) else None,
+        )
 
         logger.info(f"Running single-image Flux.1 Dev Try-On with prompt: {prompt[:200]}...")
         try:
@@ -457,10 +475,8 @@ def run_flux_tryon(
             )
         except Exception as e:
             logger.warning(f"Flux edit endpoint failed ({e}), falling back to Flux text-to-image synthesis...")
-            synthesis_prompt = (
-                f"Full-body professional fashion photography of the fashion model wearing {garment_desc or 'designer outfit'}, "
-                f"clean modern studio background, natural posture, photorealistic, 8k resolution, masterpiece."
-            )
+            # Fallback Path 2: Preserve category-specific prompt, identity, and priority rules
+            synthesis_prompt = prompt
             tryon_img = generate_cloud_image(
                 prompt=synthesis_prompt,
                 model=DEFAULT_MODEL,

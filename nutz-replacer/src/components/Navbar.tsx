@@ -18,23 +18,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-[#E8E8EF] sticky top-0 z-40 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand & Logo */}
+        {/* Brand */}
         <a 
           href="#" 
           aria-label="NUTZ REPLACER home"
-          className="flex items-center gap-3.5 group focus-visible:ring-2 focus-visible:ring-[#5B3DF0] focus-visible:outline-none rounded-xl"
+          className="flex items-center group focus-visible:ring-2 focus-visible:ring-[#5B3DF0] focus-visible:outline-none rounded-xl"
         >
-          <div className="h-10 px-2.5 py-1.5 rounded-xl bg-[#171717] flex items-center justify-center border border-black/10 shadow-sm group-hover:scale-[1.02] transition-transform">
-            <img
-              src="/nutz_logo_white.png"
-              alt="NUTZ Logo"
-              className="h-6 w-auto object-contain"
-              onError={(e) => {
-                // Fallback to original image if white png fails
-                (e.target as HTMLImageElement).src = '/nutz_logo.jpg';
-              }}
-            />
-          </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[#171717] text-lg tracking-tight font-sans">
