@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { History, ArrowUpRight, Shirt } from 'lucide-react';
 import { CloudStatus } from '../types';
@@ -6,24 +6,22 @@ import { CloudStatus } from '../types';
 interface NavbarProps {
   cloudStatus: CloudStatus;
   historyCount: number;
-  onOpenHistory: () => void;
+  currentPage?: 'home' | 'studio' | 'history';
+  onNavigate?: (page: 'home' | 'studio' | 'history') => void;
+  onOpenHistory?: () => void;
   onOpenSettings?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   historyCount,
+  currentPage = 'home',
+  onNavigate,
   onOpenHistory,
 }) => {
-  const [activeTab, setActiveTab] = useState<'studio' | 'history'>('studio');
-
   const handleTabClick = (tabId: 'studio' | 'history') => {
-    setActiveTab(tabId);
-    if (tabId === 'studio') {
-      const target = document.querySelector('#tryon-workspace');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
+    if (onNavigate) {
+      onNavigate(tabId);
+    } else if (tabId === 'history' && onOpenHistory) {
       onOpenHistory();
     }
   };
@@ -34,8 +32,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand: Pure refined human fashion editorial with Acorn Logo */}
         <a 
           href="#" 
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate?.('home');
+          }}
           aria-label="NUTZ home"
-          className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:outline-none rounded-xl"
+          className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:outline-none rounded-xl cursor-pointer"
         >
           <motion.div 
             whileHover={{ scale: 1.08, rotate: 2 }}
@@ -72,10 +74,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.94 }}
             whileHover={{ scale: 1.02 }}
             className={`relative px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
-              activeTab === 'studio' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+              currentPage === 'studio' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
             }`}
           >
-            {activeTab === 'studio' && (
+            {currentPage === 'studio' && (
               <motion.div
                 layoutId="navbar-active-pill"
                 transition={{
@@ -96,10 +98,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.94 }}
             whileHover={{ scale: 1.02 }}
             className={`relative flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
-              activeTab === 'history' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+              currentPage === 'history' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
             }`}
           >
-            {activeTab === 'history' && (
+            {currentPage === 'history' && (
               <motion.div
                 layoutId="navbar-active-pill"
                 transition={{

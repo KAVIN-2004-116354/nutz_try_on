@@ -1,7 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (page: 'home' | 'studio' | 'history', sectionId?: string) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const socialLinks = [
     {
       name: 'Instagram',
@@ -54,16 +58,52 @@ export const Footer: React.FC = () => {
 
         {/* Links - Centered */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-600 mb-8 pb-8 border-b border-[#E8E8EF] w-full max-w-lg">
-          <a href="#tryon-workspace" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+          <a 
+            href="#tryon-workspace" 
+            onClick={(e) => {
+              if (onNavigate) {
+                e.preventDefault();
+                onNavigate('studio', 'tryon-workspace');
+              }
+            }}
+            className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded cursor-pointer"
+          >
             Fitting Studio
           </a>
-          <a href="#how-it-works" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+          <a 
+            href="#how-it-works" 
+            onClick={(e) => {
+              if (onNavigate) {
+                e.preventDefault();
+                onNavigate('studio', 'how-it-works');
+              }
+            }}
+            className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded cursor-pointer"
+          >
             Craft &amp; Process
           </a>
-          <a href="#features" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+          <a 
+            href="#features" 
+            onClick={(e) => {
+              if (onNavigate) {
+                e.preventDefault();
+                onNavigate('studio', 'features');
+              }
+            }}
+            className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded cursor-pointer"
+          >
             Standards
           </a>
-          <a href="#gallery" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+          <a 
+            href="#gallery" 
+            onClick={(e) => {
+              if (onNavigate) {
+                e.preventDefault();
+                onNavigate('history', 'gallery');
+              }
+            }}
+            className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded cursor-pointer"
+          >
             LookHistory
           </a>
         </div>

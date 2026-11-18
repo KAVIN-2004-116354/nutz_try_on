@@ -17,7 +17,7 @@ import {
 import { getCloudStatus, executeIntelligentTryon } from './services/api';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS } from './presets';
 import { triggerCelebration } from './services/confetti';
-import { AlertCircle, X, Layers } from 'lucide-react';
+import { AlertCircle, X, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const CURATED_LOOKS = [
@@ -111,8 +111,55 @@ export const App: React.FC = () => {
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
-  // Workspace ref for GSAP entrance
+  // Workspace ref
   const workspaceRef = useRef<HTMLDivElement>(null);
+
+  // Current view page: 'home' (front page) vs 'studio' (fitting room + craft + standards) vs 'history'
+  const [currentPage, setCurrentPage] = useState<'home' | 'studio' | 'history'>('home');
+
+  // Synchronize URL hash with current view
+  useEffect(() => {
+    const syncHash = () => {
+      const hash = window.location.hash;
+      if (
+        hash === '#studio' ||
+        hash === '#tryon-workspace' ||
+        hash === '#curated-wardrobe' ||
+        hash === '#how-it-works' ||
+        hash === '#features'
+      ) {
+        setCurrentPage('studio');
+      } else if (hash === '#history' || hash === '#gallery') {
+        setCurrentPage('history');
+      } else {
+        setCurrentPage('home');
+      }
+    };
+    syncHash();
+    window.addEventListener('hashchange', syncHash);
+    return () => window.removeEventListener('hashchange', syncHash);
+  }, []);
+
+  const handleNavigate = (page: 'home' | 'studio' | 'history', sectionId?: string) => {
+    setCurrentPage(page);
+    if (page === 'home') {
+      window.location.hash = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (page === 'studio') {
+      window.location.hash = sectionId ? `#${sectionId}` : '#studio';
+      if (sectionId) {
+        setTimeout(() => {
+          const el = document.getElementById(sectionId);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 80);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else if (page === 'history') {
+      window.location.hash = '#history';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Initial cloud health check
   useEffect(() => {
@@ -265,182 +312,255 @@ export const App: React.FC = () => {
       height: item.height,
     });
     setGenerationStatus('completed');
-    const elem = document.getElementById('tryon-workspace');
-    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+    handleNavigate('studio', 'tryon-workspace');
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F4F8] text-[#171717] font-sans antialiased selection:bg-[#EAE8F2] selection:text-[#171717]">
+    <div className="min-h-screen flex flex-col bg-[#F5F4F8] text-[#171717] font-sans antialiased selection:bg-[#EAE8F2] selection:text-[#171717]">
       {/* 1. Global Navigation Bar */}
       <Navbar
         cloudStatus={cloudStatus}
         historyCount={history.length}
-        onOpenHistory={() => {
-          const elem = document.getElementById('gallery');
-          if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-        }}
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        onOpenHistory={() => handleNavigate('history')}
       />
 
-      {/* 2. Hero Section */}
-      <HeroSection />
+      {/* PAGE 1: Front Page Landing (Hero + Marquee + Footer only) */}
+      {currentPage === 'home' && (
+        <main className="flex-1 flex flex-col justify-between animate-fadeIn">
+          <div>
+            <HeroSection
+              onEnterStudio={() => handleNavigate('studio', 'tryon-workspace')}
+              onExploreWardrobe={() => handleNavigate('studio', 'curated-wardrobe')}
+            />
 
-      {/* Sera UI Infinite Fashion Craft Marquee */}
-      <LuxuryMarquee />
-
-      {/* 3. Virtual Try-On Studio Workspace */}
-      <section id="tryon-workspace" className="py-16 scroll-mt-20">
-        <div ref={workspaceRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Workspace Header & Curated Quick Looks */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
-            <div>
-              <h2 className="text-3xl sm:text-5xl font-serif text-[#171717] tracking-tight">
-                The Fitting Room
-              </h2>
-              <p className="text-sm text-slate-500 mt-2 max-w-xl font-normal">
-                Select a model portrait on the left and choose an outfit to preview how luxury tailoring and fabric weave drape onto your posture.
-              </p>
-            </div>
-
-            {/* Curated Showcase Wardrobe Rack */}
-            <div id="curated-wardrobe" className="p-3.5 rounded-3xl bg-white border border-[#E8E8EF] shadow-card">
-              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-[#171717]">
-                <Layers className="w-3.5 h-3.5 text-slate-700" />
-                <span>Curated Wardrobe:</span>
-              </div>
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                {CURATED_LOOKS.map((look) => (
-                  <motion.button
-                    key={look.id}
-                    type="button"
-                    whileHover={{ y: -2, scale: 1.03 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => handleApplyCuratedLook(look)}
-                    disabled={generationStatus === 'processing'}
-                    className="group flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border border-[#E8E8EF] hover:border-[#171717] bg-[#F9F9FC] hover:bg-white transition-colors duration-200 cursor-pointer shadow-sm"
-                  >
-                    <img
-                      src={look.thumb}
-                      alt={look.title}
-                      className="w-8 h-8 rounded-xl object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="text-left">
-                      <span className="block text-[11px] font-bold text-[#171717] leading-tight">
-                        {look.title}
-                      </span>
-                      <span className="block text-[9px] text-slate-400 font-medium">
-                        {look.tag}
-                      </span>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
+            {/* Sera UI Infinite Fashion Craft Marquee */}
+            <LuxuryMarquee />
           </div>
 
-          {errorMessage && (
-            <div className="mb-6 p-4 rounded-2xl bg-amber-50/95 border border-amber-200/90 text-amber-900 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm animate-fadeIn">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-semibold text-slate-900">{errorMessage}</div>
-                  {/contact admin|quota/i.test(errorMessage) && (
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      The cloud generation quota has been exhausted. Please contact system admin for quota renewal.
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                {/contact admin|quota/i.test(errorMessage) && (
-                  <a
-                    href="mailto:admin@nutz.ai?subject=Virtual%20Try-On%20Image%20Quota%20Request"
-                    className="px-3.5 py-1.5 rounded-xl bg-[#171717] hover:bg-[#2B2B38] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
-                  >
-                    <span>Contact Admin</span>
-                  </a>
-                )}
+          {/* Centered Brand Editorial Footer */}
+          <Footer onNavigate={handleNavigate} />
+        </main>
+      )}
+
+      {/* PAGE 2: Fitting Studio Workspace (The Fitting Room, Process, Standards, LookHistory) */}
+      {currentPage === 'studio' && (
+        <main className="flex-1 animate-fadeIn">
+          {/* Top Breadcrumb Navigation */}
+          <div className="bg-[#FAF9F6] border-b border-[#EAE7E0] py-3.5 px-4 sm:px-8">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleNavigate('home')}
+                className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#171717] transition-colors cursor-pointer group"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+                <span>Back to Overview</span>
+              </button>
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
                 <button
                   type="button"
-                  onClick={() => setErrorMessage(null)}
-                  aria-label="Dismiss error notification"
-                  className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-lg cursor-pointer"
+                  onClick={() => handleNavigate('home')}
+                  className="hover:text-[#171717] transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  Front Page
                 </button>
+                <span>/</span>
+                <span className="text-[#171717] font-bold">Fitting Studio</span>
               </div>
-            </div>
-          )}
-
-          {/* Main Studio Canvas Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column: Inputs */}
-            <div className="lg:col-span-6 space-y-4">
-              <div>
-                <PersonUploadCard
-                  person={person}
-                  setPerson={setPerson}
-                  disabled={generationStatus === 'processing'}
-                  onError={setErrorMessage}
-                />
-              </div>
-
-              <div>
-                <TryonBridge
-                  hasPerson={Boolean(person.previewUrl)}
-                  hasGarment={Boolean(garment.previewUrl)}
-                />
-              </div>
-
-              <div>
-                <GarmentUploadCard
-                  garment={garment}
-                  setGarment={setGarment}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
-                  disabled={generationStatus === 'processing'}
-                  onError={setErrorMessage}
-                />
-              </div>
-            </div>
-
-            {/* Right Column: Mirror Canvas */}
-            <div className="lg:col-span-6 sticky top-28">
-              <ResultStage
-                person={person}
-                garment={garment}
-                selectedCategory={selectedCategory}
-                result={result}
-                generationStatus={generationStatus}
-                currentStage={currentStage}
-                elapsedSec={elapsedSec}
-                canGenerate={canGenerate}
-                onGenerate={handleGenerate}
-                onReset={handleReset}
-                onOpenZoom={() => setIsZoomOpen(true)}
-                errorMessage={errorMessage}
-              />
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* 4. Craft & Fit Process Section */}
-      <HowItWorksSection />
+          {/* 3. Virtual Try-On Studio Workspace */}
+          <section id="tryon-workspace" className="py-16 scroll-mt-20">
+            <div ref={workspaceRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Workspace Header & Curated Quick Looks */}
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+                <div>
+                  <h2 className="text-3xl sm:text-5xl font-serif text-[#171717] tracking-tight">
+                    The Fitting Room
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-2 max-w-xl font-normal">
+                    Select a model portrait on the left and choose an outfit to preview how luxury tailoring and fabric weave drape onto your posture.
+                  </p>
+                </div>
 
-      {/* 5. Production Standards Section */}
-      <FeatureSection />
+                {/* Curated Showcase Wardrobe Rack */}
+                <div id="curated-wardrobe" className="p-3.5 rounded-3xl bg-white border border-[#E8E8EF] shadow-card">
+                  <div className="flex items-center gap-2 mb-2 text-xs font-bold text-[#171717]">
+                    <Layers className="w-3.5 h-3.5 text-slate-700" />
+                    <span>Curated Wardrobe:</span>
+                  </div>
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                    {CURATED_LOOKS.map((look) => (
+                      <motion.button
+                        key={look.id}
+                        type="button"
+                        whileHover={{ y: -2, scale: 1.03 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => handleApplyCuratedLook(look)}
+                        disabled={generationStatus === 'processing'}
+                        className="group flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border border-[#E8E8EF] hover:border-[#171717] bg-[#F9F9FC] hover:bg-white transition-colors duration-200 cursor-pointer shadow-sm"
+                      >
+                        <img
+                          src={look.thumb}
+                          alt={look.title}
+                          className="w-8 h-8 rounded-xl object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="text-left">
+                          <span className="block text-[11px] font-bold text-[#171717] leading-tight">
+                            {look.title}
+                          </span>
+                          <span className="block text-[9px] text-slate-400 font-medium">
+                            {look.tag}
+                          </span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-      {/* 6. Recent Lookbook Gallery */}
-      <GenerationHistory
-        history={history}
-        onSelectResult={handleSelectHistoryLook}
-        onClearHistory={() => setHistory([])}
-      />
+              {errorMessage && (
+                <div className="mb-6 p-4 rounded-2xl bg-amber-50/95 border border-amber-200/90 text-amber-900 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm animate-fadeIn">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900">{errorMessage}</div>
+                      {/contact admin|quota/i.test(errorMessage) && (
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          The cloud generation quota has been exhausted. Please contact system admin for quota renewal.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    {/contact admin|quota/i.test(errorMessage) && (
+                      <a
+                        href="mailto:admin@nutz.ai?subject=Virtual%20Try-On%20Image%20Quota%20Request"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#171717] hover:bg-[#2B2B38] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        <span>Contact Admin</span>
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setErrorMessage(null)}
+                      aria-label="Dismiss error notification"
+                      className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-lg cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
-      {/* 7. Footer */}
-      <Footer />
+              {/* Main Studio Canvas Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Column: Inputs */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div>
+                    <PersonUploadCard
+                      person={person}
+                      setPerson={setPerson}
+                      disabled={generationStatus === 'processing'}
+                      onError={setErrorMessage}
+                    />
+                  </div>
+
+                  <div>
+                    <TryonBridge
+                      hasPerson={Boolean(person.previewUrl)}
+                      hasGarment={Boolean(garment.previewUrl)}
+                    />
+                  </div>
+
+                  <div>
+                    <GarmentUploadCard
+                      garment={garment}
+                      setGarment={setGarment}
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                      disabled={generationStatus === 'processing'}
+                      onError={setErrorMessage}
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column: Mirror Canvas */}
+                <div className="lg:col-span-6 sticky top-28">
+                  <ResultStage
+                    person={person}
+                    garment={garment}
+                    selectedCategory={selectedCategory}
+                    result={result}
+                    generationStatus={generationStatus}
+                    currentStage={currentStage}
+                    elapsedSec={elapsedSec}
+                    canGenerate={canGenerate}
+                    onGenerate={handleGenerate}
+                    onReset={handleReset}
+                    onOpenZoom={() => setIsZoomOpen(true)}
+                    errorMessage={errorMessage}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 4. Craft & Fit Process Section */}
+          <HowItWorksSection />
+
+          {/* 5. Production Standards Section */}
+          <FeatureSection />
+
+          {/* 6. Recent Lookbook Gallery */}
+          <GenerationHistory
+            history={history}
+            onSelectResult={handleSelectHistoryLook}
+            onClearHistory={() => setHistory([])}
+          />
+
+          {/* Footer */}
+          <Footer onNavigate={handleNavigate} />
+        </main>
+      )}
+
+      {/* PAGE 3: LookHistory Dedicated View */}
+      {currentPage === 'history' && (
+        <main className="flex-1 animate-fadeIn py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => handleNavigate('home')}
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#171717] transition-colors cursor-pointer group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+              <span>Back to Overview</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('studio')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+            >
+              <span>Open Fitting Studio</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Generation History Gallery */}
+          <GenerationHistory
+            history={history}
+            onSelectResult={handleSelectHistoryLook}
+            onClearHistory={() => setHistory([])}
+          />
+
+          <Footer onNavigate={handleNavigate} />
+        </main>
+      )}
 
       {/* Full-Screen HD Zoom Modal */}
       <ImageModal
