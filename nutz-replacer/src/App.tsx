@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
+import { LuxuryMarquee } from './components/ui/LuxuryMarquee';
 import { PersonUploadCard } from './components/PersonUploadCard';
 import { GarmentUploadCard } from './components/GarmentUploadCard';
 import { TryonBridge } from './components/TryonBridge';
@@ -17,6 +18,7 @@ import { getCloudStatus, executeIntelligentTryon } from './services/api';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS } from './presets';
 import { triggerCelebration } from './services/confetti';
 import { AlertCircle, X, Layers } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const CURATED_LOOKS = [
   {
@@ -271,6 +273,9 @@ export const App: React.FC = () => {
       {/* 2. Hero Section */}
       <HeroSection />
 
+      {/* Sera UI Infinite Fashion Craft Marquee */}
+      <LuxuryMarquee />
+
       {/* 3. Virtual Try-On Studio Workspace */}
       <section id="tryon-workspace" className="py-16 scroll-mt-20">
         <div ref={workspaceRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -293,12 +298,14 @@ export const App: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {CURATED_LOOKS.map((look) => (
-                  <button
+                  <motion.button
                     key={look.id}
                     type="button"
+                    whileHover={{ y: -2, scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => handleApplyCuratedLook(look)}
                     disabled={generationStatus === 'processing'}
-                    className="group flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border border-[#E8E8EF] hover:border-[#171717] bg-[#F9F9FC] hover:bg-white transition-all duration-300 cursor-pointer active:scale-95 shadow-sm"
+                    className="group flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border border-[#E8E8EF] hover:border-[#171717] bg-[#F9F9FC] hover:bg-white transition-colors duration-200 cursor-pointer shadow-sm"
                   >
                     <img
                       src={look.thumb}
@@ -313,7 +320,7 @@ export const App: React.FC = () => {
                         {look.tag}
                       </span>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>

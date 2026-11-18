@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Download, RefreshCw, RotateCcw, Maximize2, SplitSquareHorizontal, 
   CheckCircle2, ArrowRight
@@ -106,14 +107,16 @@ export const ResultStage: React.FC<ResultStageProps> = ({
           </div>
 
           {/* Primary CTA Button: Clean, Bold Luxury Fashion */}
-          <button
+          <motion.button
             type="button"
+            whileHover={canGenerate && !isProcessing ? { scale: 1.03, y: -1 } : {}}
+            whileTap={canGenerate && !isProcessing ? { scale: 0.97 } : {}}
             onClick={onGenerate}
             disabled={!canGenerate || isProcessing}
             aria-label={isProcessing ? 'Draping outfit' : isCompleted ? 'Generate another fitting' : 'Try on outfit'}
-            className={`min-h-[50px] px-8 py-3.5 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 ${
+            className={`min-h-[50px] px-8 py-3.5 rounded-2xl font-bold text-sm transition-colors duration-200 flex items-center justify-center gap-2.5 cursor-pointer shadow-xl ${
               canGenerate && !isProcessing
-                ? 'bg-[#171717] hover:bg-[#2B2B38] text-white shadow-xl hover:scale-[1.02]'
+                ? 'bg-[#171717] hover:bg-[#2B2B38] text-white hover:shadow-2xl'
                 : 'bg-gray-100 text-gray-400 border border-[#E8E8EF] cursor-not-allowed shadow-none'
             }`}
           >
@@ -133,7 +136,7 @@ export const ResultStage: React.FC<ResultStageProps> = ({
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
-          </button>
+          </motion.button>
         </div>
 
         {/* Viewport / Mirror Stage Container */}
