@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WordCycle } from './ui/WordCycle';
 import { RadiantGrid } from './ui/RadiantGrid';
@@ -7,12 +7,10 @@ import { MagneticButton } from './ui/MagneticButton';
 
 interface HeroSectionProps {
   onEnterStudio?: () => void;
-  onExploreWardrobe?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onEnterStudio,
-  onExploreWardrobe,
 }) => {
   return (
     <section className="relative overflow-hidden pt-24 pb-16 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
@@ -49,24 +47,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           Upload your portrait and preview how bespoke tailoring, luxury ethnic silks, and modern streetwear drape over your body with authentic photographic realism.
         </motion.p>
 
-        {/* Action CTAs with Sera UI Magnetic Spring Physics */}
+        {/* Action CTA with Sera UI Magnetic Spring Physics */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="flex items-center justify-center"
         >
           <MagneticButton onClick={onEnterStudio} href={!onEnterStudio ? "#tryon-workspace" : undefined}>
-            <div className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#171717] hover:bg-[#2A2A38] text-white font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer">
+            <div className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-9 py-4 rounded-2xl bg-[#171717] hover:bg-[#2A2A38] text-white font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 group cursor-pointer">
               <span>Enter Fitting Studio</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </MagneticButton>
-
-          <MagneticButton onClick={onExploreWardrobe} href={!onExploreWardrobe ? "#curated-wardrobe" : undefined}>
-            <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-white hover:bg-[#F9F9FC] text-[#171717] font-bold text-sm border border-[#EAE7E0] shadow-sm hover:border-slate-300 transition-all duration-300 cursor-pointer">
-              <span>Explore Wardrobe</span>
-              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
             </div>
           </MagneticButton>
         </motion.div>

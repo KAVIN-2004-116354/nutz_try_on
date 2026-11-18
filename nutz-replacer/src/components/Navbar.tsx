@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { History, ArrowUpRight, Shirt } from 'lucide-react';
+import { History, User, LogOut } from 'lucide-react';
 import { CloudStatus } from '../types';
 
 interface NavbarProps {
@@ -10,6 +10,9 @@ interface NavbarProps {
   onNavigate?: (page: 'home' | 'studio' | 'history') => void;
   onOpenHistory?: () => void;
   onOpenSettings?: () => void;
+  onOpenSignIn?: () => void;
+  user?: { email: string; name: string } | null;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentPage = 'home',
   onNavigate,
   onOpenHistory,
+  onOpenSignIn,
+  user,
+  onSignOut,
 }) => {
   const handleTabClick = (tabId: 'studio' | 'history') => {
     if (onNavigate) {
@@ -122,20 +128,40 @@ export const Navbar: React.FC<NavbarProps> = ({
           </motion.button>
         </nav>
 
-        {/* Right Actions: Retail Demo Link */}
+        {/* Right Actions: Sign In Button */}
         <div className="flex items-center gap-3">
-          <motion.a
-            href="/demo"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ y: -1, scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#171717] hover:bg-[#2B2B36] text-white text-xs font-bold transition-colors shadow-sm"
-          >
-            <Shirt className="w-3.5 h-3.5 text-white/80" />
-            <span>Retail Demo</span>
-            <ArrowUpRight className="w-3 h-3 opacity-60" />
-          </motion.a>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF9F6] border border-[#E8E8EF]">
+                <div className="w-6 h-6 rounded-full bg-[#171717] text-white flex items-center justify-center text-[10px] font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-xs font-bold text-[#171717] max-w-[120px] truncate hidden sm:inline">
+                  {user.name}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onSignOut}
+                title="Sign out"
+                aria-label="Sign out"
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <motion.button
+              type="button"
+              onClick={onOpenSignIn}
+              whileHover={{ y: -1, scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#171717] hover:bg-[#2B2B38] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5 text-white/90" />
+              <span>Sign In</span>
+            </motion.button>
+          )}
         </div>
       </div>
     </header>

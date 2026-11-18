@@ -11,6 +11,7 @@ import { FeatureSection } from './components/FeatureSection';
 import { GenerationHistory } from './components/GenerationHistory';
 import { Footer } from './components/Footer';
 import { ImageModal } from './components/ImageModal';
+import { SignInModal } from './components/SignInModal';
 import { 
   CloudStatus, GenerationStatus, ImageInputState, TryonResult, HistoryItem 
 } from './types';
@@ -107,6 +108,35 @@ export const App: React.FC = () => {
 
   // Full-screen zoom modal
   const [isZoomOpen, setIsZoomOpen] = useState<boolean>(false);
+
+  // User Authentication State
+  const [user, setUser] = useState<{ email: string; name: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('nutz_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
+
+  const handleSignInSuccess = (newUser: { email: string; name: string }) => {
+    setUser(newUser);
+    try {
+      localStorage.setItem('nutz_user', JSON.stringify(newUser));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    try {
+      localStorage.removeItem('nutz_user');
+    } catch {
+      // ignore
+    }
+  };
 
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -324,6 +354,9 @@ export const App: React.FC = () => {
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onOpenHistory={() => handleNavigate('history')}
+        onOpenSignIn={() => setIsSignInOpen(true)}
+        user={user}
+        onSignOut={handleSignOut}
       />
 
       {/* PAGE 1: Front Page Landing (Hero + Marquee + Footer only) */}
@@ -332,7 +365,6 @@ export const App: React.FC = () => {
           <div>
             <HeroSection
               onEnterStudio={() => handleNavigate('studio', 'tryon-workspace')}
-              onExploreWardrobe={() => handleNavigate('studio', 'curated-wardrobe')}
             />
 
             {/* Sera UI Infinite Fashion Craft Marquee */}
@@ -570,6 +602,13 @@ export const App: React.FC = () => {
         title="High-Definition Garment Drape & Fitting Preview"
         resolution="High-Resolution HD"
         fileSizeStr="1.84 MB"
+      />
+
+      {/* Sign In Modal */}
+      <SignInModal
+        isOpen={isSignInOpen}
+        onClose={() => setIsSignInOpen(false)}
+        onSuccess={handleSignInSuccess}
       />
     </div>
   );
