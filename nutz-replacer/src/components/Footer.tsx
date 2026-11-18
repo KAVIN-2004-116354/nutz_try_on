@@ -40,61 +40,57 @@ export const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="bg-white border-t border-[#E8E8EF] py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-[#E8E8EF]">
-          {/* Brand & Tagline */}
-          <div className="flex items-center">
-            <div>
-              <span className="font-extrabold text-[#171717] text-base tracking-tight font-sans">
-                NUTZ <span className="text-[#171717]">FITTING ROOM</span>
-              </span>
-              <p className="text-xs text-slate-500">
-                Bespoke Tailoring. Uncompromised Garment Drape.
-              </p>
-            </div>
-          </div>
-
-          {/* Links */}
-          <div className="flex flex-wrap items-center gap-6 text-xs font-semibold text-slate-600">
-            <a href="#tryon-workspace" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
-              Fitting Studio
-            </a>
-            <a href="#how-it-works" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
-              Craft &amp; Process
-            </a>
-            <a href="#features" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
-              Standards
-            </a>
-            <a href="#gallery" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
-              Lookbook
-            </a>
-          </div>
+    <footer className="bg-white border-t border-[#E8E8EF] py-14">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center">
+        {/* Brand & Tagline - Centered */}
+        <div className="mb-6 flex flex-col items-center justify-center text-center">
+          <span className="font-extrabold text-[#171717] text-lg tracking-tight font-sans">
+            NUTZ <span className="text-[#171717]">FITTING ROOM</span>
+          </span>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm">
+            Bespoke Tailoring. Uncompromised Garment Drape.
+          </p>
         </div>
 
-        {/* Copyright & Circular Social Action Buttons */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-6">
-          <p>© {new Date().getFullYear()} NUTZ Fitting Room. All rights reserved.</p>
-
-          {/* Circular Social & Contact Buttons (Instagram, Email, WhatsApp) */}
-          <div className="flex items-center gap-3">
-            {socialLinks.map((item) => (
-              <motion.a
-                key={item.name}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={item.ariaLabel}
-                title={item.name}
-                whileHover={{ y: -3, scale: 1.08 }}
-                whileTap={{ scale: 0.92 }}
-                className="w-11 h-11 rounded-full border border-[#171717]/15 bg-white text-[#171717] hover:bg-[#171717] hover:text-white hover:border-[#171717] flex items-center justify-center transition-colors duration-300 shadow-sm cursor-pointer"
-              >
-                {item.icon}
-              </motion.a>
-            ))}
-          </div>
+        {/* Links - Centered */}
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-600 mb-8 pb-8 border-b border-[#E8E8EF] w-full max-w-lg">
+          <a href="#tryon-workspace" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+            Fitting Studio
+          </a>
+          <a href="#how-it-works" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+            Craft &amp; Process
+          </a>
+          <a href="#features" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+            Standards
+          </a>
+          <a href="#gallery" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
+            Lookbook
+          </a>
         </div>
+
+        {/* Circular Social Action Buttons (Instagram, Email, WhatsApp) - Centered */}
+        <div className="flex items-center justify-center gap-3.5 mb-5">
+          {socialLinks.map((item) => (
+            <motion.a
+              key={item.name}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.ariaLabel}
+              title={item.name}
+              whileHover={{ y: -3, scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
+              className="w-11 h-11 rounded-full border border-[#171717]/15 bg-white text-[#171717] hover:bg-[#171717] hover:text-white hover:border-[#171717] flex items-center justify-center transition-colors duration-300 shadow-sm cursor-pointer"
+            >
+              {item.icon}
+            </motion.a>
+          ))}
+        </div>
+
+        {/* Copyright - Centered in middle of the page */}
+        <p className="text-center font-normal text-xs text-slate-500">
+          © {new Date().getFullYear()} NUTZ Fitting Room. All rights reserved.
+        </p>
       </div>
     </footer>
   );
