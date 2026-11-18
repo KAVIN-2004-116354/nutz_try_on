@@ -95,7 +95,9 @@ def generate_cloud_image(
     resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
     if resp.status_code != 200:
         logger.error(f"Cloud generation failed (HTTP {resp.status_code}): {resp.text}")
-        raise RuntimeError(f"Cloud generation failed: HTTP {resp.status_code} - {resp.text}")
+        if resp.status_code == 429 or "quota" in resp.text.lower() or "insufficient_quota" in resp.text.lower():
+            raise RuntimeError("Generation quota reached. Please contact admin.")
+        raise RuntimeError("Cloud generation service unavailable. Please contact admin.")
 
     data = resp.json().get("data", [])
     if not data:
@@ -194,7 +196,9 @@ def edit_cloud_image(
     resp = requests.post(url, headers=headers, files=files, data=data, timeout=timeout)
     if resp.status_code != 200:
         logger.error(f"Cloud image edit failed (HTTP {resp.status_code}): {resp.text}")
-        raise RuntimeError(f"Cloud image edit failed: HTTP {resp.status_code} - {resp.text}")
+        if resp.status_code == 429 or "quota" in resp.text.lower() or "insufficient_quota" in resp.text.lower():
+            raise RuntimeError("Generation quota reached. Please contact admin.")
+        raise RuntimeError("Cloud image edit service unavailable. Please contact admin.")
 
     data_resp = resp.json().get("data", [])
     if not data_resp:

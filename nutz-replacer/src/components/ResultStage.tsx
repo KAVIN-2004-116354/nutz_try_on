@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Download, RefreshCw, RotateCcw, Maximize2, SplitSquareHorizontal, 
-  CheckCircle2, ArrowRight
+  CheckCircle2, ArrowRight, Mail
 } from 'lucide-react';
 import { TryonResult, ImageInputState, GenerationStatus } from '../types';
 
@@ -17,6 +17,7 @@ interface ResultStageProps {
   onGenerate: () => void;
   onReset: () => void;
   onOpenZoom: () => void;
+  errorMessage?: string | null;
 }
 
 const STAGE_LABELS = [
@@ -38,6 +39,7 @@ export const ResultStage: React.FC<ResultStageProps> = ({
   onGenerate,
   onReset,
   onOpenZoom,
+  errorMessage,
 }) => {
   const [sliderPosition, setSliderPosition] = useState<number>(50);
   const [showSlider, setShowSlider] = useState<boolean>(true);
@@ -126,6 +128,11 @@ export const ResultStage: React.FC<ResultStageProps> = ({
               <>
                 <RefreshCw className="w-4 h-4" />
                 <span>Try Another Combination</span>
+              </>
+            ) : generationStatus === 'failed' ? (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                <span>Retry Fitting</span>
               </>
             ) : (
               <>
@@ -320,6 +327,59 @@ export const ResultStage: React.FC<ResultStageProps> = ({
                   <Download className="w-4 h-4 text-[#171717]" />
                   <span>Download Look</span>
                 </a>
+              </div>
+            </div>
+          ) : generationStatus === 'failed' ? (
+            /* FAILED / RETRY STATE */
+            <div className="flex flex-col items-center justify-center p-8 text-center max-w-sm animate-fadeIn">
+              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mb-4 border border-amber-200 shadow-sm">
+                {errorMessage && /contact admin|quota/i.test(errorMessage) ? (
+                  <Mail className="w-6 h-6 stroke-[1.8]" />
+                ) : (
+                  <RotateCcw className="w-6 h-6 stroke-[1.8]" />
+                )}
+              </div>
+              <h4 className="text-base font-extrabold text-[#171717] mb-1">
+                {errorMessage && /contact admin|quota/i.test(errorMessage)
+                  ? 'Quota Limit Reached'
+                  : 'Fitting Synthesis Unsuccessful'}
+              </h4>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed mb-5">
+                {errorMessage && /contact admin|quota/i.test(errorMessage)
+                  ? 'The cloud generation quota has been exhausted. Please contact admin to recharge or upgrade access.'
+                  : (errorMessage || 'The inference pipeline encountered an issue. Please contact admin or retry with different selections.')}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full justify-center">
+                {errorMessage && /contact admin|quota/i.test(errorMessage) ? (
+                  <>
+                    <a
+                      href="mailto:admin@nutz.ai?subject=Virtual%20Try-On%20Image%20Quota%20Request"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#171717] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#2B2B38] transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Contact Admin</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={onGenerate}
+                      disabled={!canGenerate}
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Retry</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onGenerate}
+                    disabled={!canGenerate}
+                    className="px-6 py-2.5 rounded-xl bg-[#171717] text-white font-bold text-xs flex items-center gap-2 hover:bg-[#2B2B38] transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Retry Fitting</span>
+                  </button>
+                )}
               </div>
             </div>
           ) : (

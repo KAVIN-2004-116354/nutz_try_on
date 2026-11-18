@@ -101,6 +101,7 @@ export const App: React.FC = () => {
   const [elapsedSec, setElapsedSec] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
+  const isGeneratingRef = useRef<boolean>(false);
 
   // Full-screen zoom modal
   const [isZoomOpen, setIsZoomOpen] = useState<boolean>(false);
@@ -181,8 +182,9 @@ export const App: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!canGenerate || generationStatus === 'processing') return;
+    if (!canGenerate || isGeneratingRef.current || generationStatus === 'processing' || generationStatus === 'uploading') return;
 
+    isGeneratingRef.current = true;
     setGenerationStatus('processing');
     setCurrentStage(1);
     setElapsedSec(0);
@@ -226,9 +228,18 @@ export const App: React.FC = () => {
     } catch (err: any) {
       console.error('[Nutz Replacer Generation Error]:', err);
       setGenerationStatus('failed');
-      setErrorMessage(
-        err.message || 'Generation failed. Please try another combination or retry.'
-      );
+      const raw = String(err?.message || '');
+      if (/quota|429|insufficient_quota/i.test(raw)) {
+        setErrorMessage('Generation quota reached. Please contact admin.');
+      } else if (/contact admin/i.test(raw)) {
+        setErrorMessage(raw);
+      } else if (raw.includes('{') || raw.includes('error:') || raw.includes('failed:')) {
+        setErrorMessage('Generation could not be completed. Please contact admin.');
+      } else {
+        setErrorMessage(raw || 'Generation failed. Please contact admin or retry.');
+      }
+    } finally {
+      isGeneratingRef.current = false;
     }
   };
 
@@ -320,19 +331,38 @@ export const App: React.FC = () => {
           </div>
 
           {errorMessage && (
-            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center justify-between shadow-sm animate-fadeIn">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-[#DC2626] flex-shrink-0" />
-                <span className="font-semibold">{errorMessage}</span>
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50/95 border border-amber-200/90 text-amber-900 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
+                  <AlertCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">{errorMessage}</div>
+                  {/contact admin|quota/i.test(errorMessage) && (
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      The cloud generation quota has been exhausted. Please contact system admin for quota renewal.
+                    </div>
+                  )}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setErrorMessage(null)}
-                aria-label="Dismiss error notification"
-                className="text-red-500 hover:text-red-800 transition p-1 rounded-lg cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                {/contact admin|quota/i.test(errorMessage) && (
+                  <a
+                    href="mailto:admin@nutz.ai?subject=Virtual%20Try-On%20Image%20Quota%20Request"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#171717] hover:bg-[#2B2B38] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                  >
+                    <span>Contact Admin</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setErrorMessage(null)}
+                  aria-label="Dismiss error notification"
+                  className="text-slate-400 hover:text-slate-700 transition p-1.5 rounded-lg cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -382,6 +412,7 @@ export const App: React.FC = () => {
                 onGenerate={handleGenerate}
                 onReset={handleReset}
                 onOpenZoom={() => setIsZoomOpen(true)}
+                errorMessage={errorMessage}
               />
             </div>
           </div>

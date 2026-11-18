@@ -16,23 +16,13 @@ from PIL import Image
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-try:
-    from src.inference.engine import CatVTONLoRAEngine, extract_clean_garment
-except Exception:
-    CatVTONLoRAEngine = None
-    def extract_clean_garment(img): return img
-
-try:
-    from src.inference.comfy_client import is_comfyui_alive, run_comfyui_tryon, run_openmoss_tryon
-except Exception:
-    def is_comfyui_alive(): return False
-    def run_comfyui_tryon(*args, **kwargs): raise RuntimeError("ComfyUI backend not available")
-    def run_openmoss_tryon(*args, **kwargs): raise RuntimeError("OpenMOSS backend not available")
-
-try:
-    from src.inference.face_swap import get_face_swap_engine
-except Exception:
-    def get_face_swap_engine(): return None
+# Pure Cloud FLUX.1 Dev Mode: Local CatVTON, ComfyUI, and FaceSwap engines are disabled
+CatVTONLoRAEngine = None
+def extract_clean_garment(img): return img
+def is_comfyui_alive(): return False
+def run_comfyui_tryon(*args, **kwargs): raise RuntimeError("ComfyUI backend is disabled. System is operating exclusively in FLUX.1 Dev Cloud mode.")
+def run_openmoss_tryon(*args, **kwargs): raise RuntimeError("OpenMOSS backend is disabled. System is operating exclusively in FLUX.1 Dev Cloud mode.")
+def get_face_swap_engine(): return None
 
 from src.inference.cloud_generator import generate_cloud_image, edit_cloud_image, run_flux_tryon, is_cloud_flux_alive, get_api_key
 from src.inference.grok_vision import grok_vision_analyze
@@ -181,23 +171,23 @@ def home():
 
 @app.get("/health")
 def health_check():
-    indian_ckpt = PROJECT_ROOT / "experiments/lora_outputs/catvton_lora_indian_ethnic_rtx5050.safetensors"
-    western_ckpt = PROJECT_ROOT / "experiments/lora_outputs/catvton_lora_rtx5050_extended.safetensors"
-    comfy_ok = is_comfyui_alive()
     cloud_ok = is_cloud_flux_alive()
     return {
         "status": "healthy",
         "service": "Nutz Try On Commercial Gateway",
+        "mode": "FLUX_1_DEV_CLOUD_EXCLUSIVE",
         "version": "2.2.0",
-        "comfyui_backend": "connected" if comfy_ok else "offline",
+        "comfyui_backend": "disabled (cloud flux only)",
         "cloud_flux": "online" if cloud_ok else "offline",
         "supported_domains": ["western", "indian_ethnic"],
         "active_models": {
-            "western": western_ckpt.exists(),
-            "indian_ethnic": indian_ckpt.exists()
+            "flux_dev_012_cloud": cloud_ok,
+            "local_catvton": False,
+            "local_comfyui": False,
+            "local_face_swap": False
         },
-        "engine_ready": True,
-        "faceswap_ready": True,
+        "engine_ready": cloud_ok,
+        "faceswap_ready": False,
         "cloud_flux_ready": cloud_ok,
         "timestamp": time.time()
     }
@@ -330,71 +320,62 @@ async def _execute_tryon_request(request: Request, forced_engine: Optional[str] 
         domain = "western" if category == "upper_body" else "indian_ethnic"
     clean_domain = "indian_ethnic" if domain.lower().strip() in ("indian", "ethnic", "ethnic_wear", "indian_ethnic") else "western"
 
-    is_face_swap = str(engine_choice).lower().strip() in ("face_swap", "faceswap")
-    is_flux = not is_face_swap
+    # Pure FLUX.1 Dev Cloud Mode - Local CatVTON and Face Swap models are bypassed
+    is_face_swap = False
+    is_flux = True
     result = None
 
-    # 1. Fast Face Swap Mode (replaces the garment model's face with the user's face)
-    if is_face_swap:
-        try:
-            result = get_face_swap_engine().swap(
-                user_face_img=person_pil,
-                garment_model_img=garment_pil,
-            )
-        except ValueError as ve:
-            raise HTTPException(status_code=422, detail=str(ve))
-        except Exception as fs_err:
-            raise HTTPException(status_code=500, detail=f"Face swap inference error: {str(fs_err)}")
+    # Exclusive FLUX-DEV-012 Cloud Virtual Try-On Model (1024x1024 Photorealistic Synthesis)
+    try:
+        # Map known garment filenames or prompts to descriptive styling instructions
+        garment_hints = {
+            "sample_anarkali_dress": "exquisite emerald green silk Indian anarkali dress with intricate gold embroidery and matching dupatta",
+            "sample_navy_blazer": "formal tailored navy blue wool blazer over a crisp white dress shirt",
+            "sample_black_tshirt": "modern minimalist black crew-neck cotton t-shirt",
+            "sample_emerald_shirt": "casual light mint pastel green button-down short-sleeve shirt with all-over printed micro character motifs and spread collar",
+            "sample_denim_jacket": "vintage blue denim trucker jacket over a white tee",
+            "green_shirt": "olive green casual linen button-up shirt",
+            "sample_ethnic_anarkali_model": "traditional royal emerald green bridal anarkali gown",
+        }
+        garment_desc = custom_prompt or ""
+        # Explicitly normalize and bind category
+        canonical_cat = normalize_category(category) if category else None
+        if not canonical_cat and isinstance(garment_raw, str):
+            for k, v in garment_hints.items():
+                if k in garment_raw.lower():
+                    canonical_cat = normalize_category(k)
+                    garment_desc = v
+                    break
+        if not canonical_cat:
+            canonical_cat = "shirt" if clean_domain == "western" else "kurta"
 
-    # 2. Exclusive FLUX-DEV-012 Cloud Virtual Try-On Model (1024x1024 Photorealistic Synthesis)
-    else:
-        try:
-            # Map known garment filenames or prompts to descriptive styling instructions
-            garment_hints = {
-                "sample_anarkali_dress": "exquisite emerald green silk Indian anarkali dress with intricate gold embroidery and matching dupatta",
-                "sample_navy_blazer": "formal tailored navy blue wool blazer over a crisp white dress shirt",
-                "sample_black_tshirt": "modern minimalist black crew-neck cotton t-shirt",
-                "sample_emerald_shirt": "casual light mint pastel green button-down short-sleeve shirt with all-over printed micro character motifs and spread collar",
-                "sample_denim_jacket": "vintage blue denim trucker jacket over a white tee",
-                "green_shirt": "olive green casual linen button-up shirt",
-                "sample_ethnic_anarkali_model": "traditional royal emerald green bridal anarkali gown",
-            }
-            garment_desc = custom_prompt or ""
-            # Explicitly normalize and bind category
-            canonical_cat = normalize_category(category) if category else None
-            if not canonical_cat and isinstance(garment_raw, str):
-                for k, v in garment_hints.items():
-                    if k in garment_raw.lower():
-                        canonical_cat = normalize_category(k)
-                        garment_desc = v
-                        break
-            if not canonical_cat:
-                canonical_cat = "shirt" if clean_domain == "western" else "kurta"
-
-            print(f"[Gateway] Executing Try-On exclusively via FLUX-DEV-012 Cloud Model (category: {canonical_cat}, garment: {garment_desc})")
-            flux_res = run_flux_tryon(
-                person_img=person_pil,
-                garment_img=garment_pil,
-                garment_desc=garment_desc,
-                custom_prompt=custom_prompt,
-                category=canonical_cat,
-                use_canvas_conditioning=garment_pil is not None,
-            )
-            result = {
-                "status": "success",
-                "domain": clean_domain,
-                "model_used": "FLUX-DEV-012 (Flux.1 Dev Cloud)",
-                "lora_checkpoint_used": "FLUX-DEV-012 Cloud Synthesizer",
-                "num_lora_tensors": 0,
-                "mediapipe_detected": True,
-                "inference_time_ms": flux_res["inference_time_ms"],
-                "peak_vram_mb": 0.0,
-                "tryon_image": flux_res["tryon_image"],
-                "mask_image": None,
-            }
-        except Exception as f_err:
-            print(f"[Gateway Error] Flux Try-On failed: {f_err}")
-            raise HTTPException(status_code=500, detail=f"Flux.1 Dev Cloud inference error: {str(f_err)}")
+        print(f"[Gateway] Executing Try-On exclusively via FLUX-DEV-012 Cloud Model (category: {canonical_cat}, garment: {garment_desc})")
+        flux_res = run_flux_tryon(
+            person_img=person_pil,
+            garment_img=garment_pil,
+            garment_desc=garment_desc,
+            custom_prompt=custom_prompt,
+            category=canonical_cat,
+            use_canvas_conditioning=garment_pil is not None,
+        )
+        result = {
+            "status": "success",
+            "domain": clean_domain,
+            "model_used": "FLUX-DEV-012 (Flux.1 Dev Cloud)",
+            "lora_checkpoint_used": "FLUX-DEV-012 Cloud Synthesizer",
+            "num_lora_tensors": 0,
+            "mediapipe_detected": True,
+            "inference_time_ms": flux_res["inference_time_ms"],
+            "peak_vram_mb": 0.0,
+            "tryon_image": flux_res["tryon_image"],
+            "mask_image": None,
+        }
+    except Exception as f_err:
+        print(f"[Gateway Error] Flux Try-On failed: {f_err}")
+        err_str = str(f_err)
+        if "quota" in err_str.lower() or "429" in err_str or "contact admin" in err_str.lower():
+            raise HTTPException(status_code=429, detail="Generation quota reached. Please contact admin.")
+        raise HTTPException(status_code=500, detail="Service temporarily unavailable. Please contact admin.")
 
     # Save to requested destination: outputs/gateway_{prefix}_{domain}_{seed}.png
     out_prefix = "gateway_flux" if is_flux else ("gateway_faceswap" if is_face_swap else "gateway_tryon")
@@ -692,7 +673,10 @@ async def generate_intelligent_tryon(request: Request):
         tryon_img = flux_res["tryon_image"]
     except Exception as f_err:
         print(f"[Gateway Error] FLUX-DEV-012 Inpainting failed: {f_err}")
-        raise HTTPException(status_code=500, detail=f"FLUX-DEV-012 Cloud inference error: {str(f_err)}")
+        err_str = str(f_err)
+        if "quota" in err_str.lower() or "429" in err_str or "contact admin" in err_str.lower():
+            raise HTTPException(status_code=429, detail="Generation quota reached. Please contact admin.")
+        raise HTTPException(status_code=500, detail="Service temporarily unavailable. Please contact admin.")
 
     # Step 5: Save outputs
     out_filename = f"intelligent_tryon_{seed}.png"
@@ -758,8 +742,8 @@ async def generate_intelligent_tryon(request: Request):
 @app.post("/v1/face-swap")
 @app.post("/api/v1/face-swap")
 async def generate_face_swap(request: Request):
-    """Replaces the face on the garment/model image with the user's face."""
-    return await _execute_tryon_request(request, forced_engine="face_swap")
+    """Face swap is disabled in Pure Cloud FLUX mode."""
+    raise HTTPException(status_code=400, detail="Face-swap and local models are disabled. System is operating exclusively with Cloud FLUX.1 Dev.")
 
 
 @app.get("/api/v1/cloud-status")

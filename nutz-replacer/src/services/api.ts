@@ -4,6 +4,23 @@ import { CloudStatus, TryonResult, GrokAnalysis } from '../types';
 const API_BASE = '';
 
 /**
+ * Sanitizes and maps server error messages to user-friendly messages,
+ * ensuring technical stack traces / quota errors always guide the user to contact admin.
+ */
+export function cleanErrorMessage(status: number, rawMessage: string): string {
+  if (status === 429 || /quota|insufficient_quota|429/i.test(rawMessage)) {
+    return 'Generation quota reached. Please contact admin.';
+  }
+  if (/contact admin/i.test(rawMessage)) {
+    return rawMessage;
+  }
+  if (rawMessage.includes('{') || rawMessage.includes('inference error') || rawMessage.includes('Cloud image edit')) {
+    return 'Service temporarily unavailable. Please contact admin.';
+  }
+  return rawMessage || 'Generation failed. Please contact admin.';
+}
+
+/**
  * Checks the status of the remote FLUX-DEV-012 model on Nutz Railway Cloud.
  */
 export async function getCloudStatus(): Promise<CloudStatus> {
@@ -109,30 +126,47 @@ export async function executeFluxTryon(params: GenerateTryonParams): Promise<Try
     formData.append('garment_desc', params.garmentName);
   }
 
-  // Submit to the dedicated /api/v1/flux-tryon endpoint (or /api/v1/try-on)
-  const response = await fetch(`${API_BASE}/api/v1/flux-tryon`, {
-    method: 'POST',
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 180000);
 
-  if (!response.ok) {
-    let errorDetail = `Gateway returned HTTP ${response.status}`;
-    try {
-      const errJson = await response.json();
-      errorDetail = errJson.detail || errorDetail;
-    } catch (_) {
-      const rawText = await response.text().catch(() => '');
-      if (rawText) errorDetail = rawText.slice(0, 200);
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/flux-tryon`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorDetail = `Gateway returned HTTP ${response.status}`;
+      try {
+        const errJson = await response.json();
+        errorDetail = errJson.detail || errorDetail;
+      } catch (_) {
+        const rawText = await response.text().catch(() => '');
+        if (rawText) errorDetail = rawText.slice(0, 300);
+      }
+      throw new Error(cleanErrorMessage(response.status, errorDetail));
     }
-    throw new Error(errorDetail);
-  }
 
-  const data = await response.json();
-  if (data.status !== 'success') {
-    throw new Error(data.message || 'Generation failed on FLUX-DEV-012 server');
-  }
+    const data = await response.json();
+    if (data.status !== 'success') {
+      const msg = data.message || 'Generation failed on FLUX-DEV-012 server';
+      throw new Error(cleanErrorMessage(response.status, msg));
+    }
 
-  return data as TryonResult;
+    return data as TryonResult;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Generation request timed out after 180 seconds. The model server may be experiencing high load.');
+    }
+    if (err instanceof TypeError && err.message.includes('fetch')) {
+      throw new Error('Cannot connect to the Try-On Gateway at http://localhost:8000. Please ensure the backend server is running.');
+    }
+    throw err;
+  }
 }
 
 /**
@@ -314,44 +348,46 @@ export async function executeIntelligentTryon(params: {
     formData.append('seed', params.seed.toString());
   }
 
+  // Network timeout controller (180s for diffusion models)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 180000);
+
   try {
     const response = await fetch(`${API_BASE}/api/v1/intelligent-tryon`, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.status === 'success') {
-        return data as TryonResult;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorDetail = `Gateway returned HTTP ${response.status}`;
+      try {
+        const errJson = await response.json();
+        errorDetail = errJson.detail || errJson.message || errorDetail;
+      } catch (_) {
+        const rawText = await response.text().catch(() => '');
+        if (rawText) errorDetail = rawText.slice(0, 300);
       }
+      throw new Error(cleanErrorMessage(response.status, errorDetail));
     }
-  } catch (err) {
-    console.warn('[Nutz Replacer] Gateway intelligent tryon endpoint unreachable, using studio atelier render:', err);
+
+    const data = await response.json();
+    if (data.status !== 'success') {
+      const msg = data.message || data.detail || 'Virtual try-on generation failed on server.';
+      throw new Error(cleanErrorMessage(response.status, msg));
+    }
+
+    return data as TryonResult;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Generation request timed out after 180 seconds. The model server may be experiencing high load.');
+    }
+    if (err instanceof TypeError && err.message.includes('fetch')) {
+      throw new Error('Cannot connect to the Try-On Gateway at http://localhost:8000. Please ensure the backend server is running.');
+    }
+    throw err;
   }
-
-  // Graceful studio atelier fallback so the UI never crashes or halts
-  await new Promise((r) => setTimeout(r, 1200));
-
-  const isEthnicOrDress = (
-    (typeof params.category === 'string' && (params.category.includes('dress') || params.category.includes('anarkali') || params.category.includes('saree') || params.category.includes('kurta'))) ||
-    (typeof params.garmentImage === 'string' && params.garmentImage.includes('anarkali')) ||
-    (typeof params.personImage === 'string' && params.personImage.includes('female'))
-  );
-
-  const fallbackResult = isEthnicOrDress
-    ? '/studio/assets/sample_ethnic_anarkali_model.jpg'
-    : '/studio/assets/studio_demo/demo_tryon_result.jpg';
-
-  return {
-    status: 'success',
-    domain: isEthnicOrDress ? 'indian_ethnic' : 'western',
-    result_url: fallbackResult,
-    image_data: fallbackResult,
-    latency_seconds: 16.8,
-    inference_time_ms: 16800,
-    model_used: 'FLUX-DEV-012 (Haute-AI Studio)',
-    width: 1024,
-    height: 1024,
-  };
 }

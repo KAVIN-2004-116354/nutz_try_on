@@ -27,12 +27,20 @@ export const GarmentUploadCard: React.FC<GarmentUploadCardProps> = ({
   const [showDetailedCategories, setShowDetailedCategories] = useState(false);
 
   const processFile = (file: File) => {
-    if (!SUPPORTED_FORMATS.includes(file.type)) {
+    if (!file) {
+      onError('No file selected.');
+      return;
+    }
+    if (file.size === 0) {
+      onError('The selected file is empty (0 bytes). Please upload a valid image.');
+      return;
+    }
+    if (!SUPPORTED_FORMATS.includes(file.type.toLowerCase())) {
       onError('Unsupported image format. Please upload JPG, JPEG, PNG, or WEBP.');
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      onError('File size exceeds 20MB limit. Please upload a smaller image.');
+      onError('File size exceeds the 20MB limit. Please upload a smaller image.');
       return;
     }
 
