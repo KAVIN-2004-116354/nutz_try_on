@@ -3,35 +3,15 @@ import { ArrowRight, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WordCycle } from './ui/WordCycle';
 import { RadiantGrid } from './ui/RadiantGrid';
-import { ShimmerBadge } from './ui/ShimmerBadge';
 import { MagneticButton } from './ui/MagneticButton';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative overflow-hidden pt-20 pb-16 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
+    <section className="relative overflow-hidden pt-24 pb-16 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
       {/* Sera UI Interactive Radiant Grid & Ambient Lighting */}
       <RadiantGrid />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        {/* Sera UI Shimmer Border Beam Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="flex justify-center mb-7"
-        >
-          <ShimmerBadge>
-            <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse" />
-            <span className="tracking-wider uppercase text-[10px] text-slate-500 font-bold">
-              Atelier Fitting Room
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-[11px] text-[#171717] font-semibold">
-              Live Drape Simulation
-            </span>
-          </ShimmerBadge>
-        </motion.div>
-
         {/* Master Headline with Sera UI Kinetic WordCycle */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
