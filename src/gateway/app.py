@@ -16,9 +16,24 @@ from PIL import Image
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.inference.engine import CatVTONLoRAEngine, extract_clean_garment
-from src.inference.comfy_client import is_comfyui_alive, run_comfyui_tryon, run_openmoss_tryon
-from src.inference.face_swap import get_face_swap_engine
+try:
+    from src.inference.engine import CatVTONLoRAEngine, extract_clean_garment
+except Exception:
+    CatVTONLoRAEngine = None
+    def extract_clean_garment(img): return img
+
+try:
+    from src.inference.comfy_client import is_comfyui_alive, run_comfyui_tryon, run_openmoss_tryon
+except Exception:
+    def is_comfyui_alive(): return False
+    def run_comfyui_tryon(*args, **kwargs): raise RuntimeError("ComfyUI backend not available")
+    def run_openmoss_tryon(*args, **kwargs): raise RuntimeError("OpenMOSS backend not available")
+
+try:
+    from src.inference.face_swap import get_face_swap_engine
+except Exception:
+    def get_face_swap_engine(): return None
+
 from src.inference.cloud_generator import generate_cloud_image, edit_cloud_image, run_flux_tryon, is_cloud_flux_alive, get_api_key
 from src.inference.grok_vision import grok_vision_analyze
 from src.inference.category_prompts import (
@@ -27,10 +42,17 @@ from src.inference.category_prompts import (
     build_flux_category_prompt,
     CATEGORY_CONFIGS,
 )
-from src.preprocessing.segmentation_pipeline import generate_intelligent_replacement_mask
+
+try:
+    from src.preprocessing.segmentation_pipeline import generate_intelligent_replacement_mask
+except Exception:
+    def generate_intelligent_replacement_mask(*args, **kwargs): return (None, None)
 
 # Export DOMAIN_CHECKPOINTS for test and client compatibility
-DOMAIN_CHECKPOINTS = CatVTONLoRAEngine.CHECKPOINTS
+DOMAIN_CHECKPOINTS = CatVTONLoRAEngine.CHECKPOINTS if CatVTONLoRAEngine else {
+    "indian_ethnic": str(PROJECT_ROOT / "experiments/lora_outputs/catvton_lora_indian_ethnic_rtx5050.safetensors"),
+    "western": str(PROJECT_ROOT / "experiments/lora_outputs/catvton_lora_rtx5050_extended.safetensors")
+}
 
 app = FastAPI(
     title="Nutz Try On Commercial API Gateway",
@@ -47,9 +69,11 @@ app.add_middleware(
 )
 
 # Global singleton inference engines for rapid reuse
-engines: Dict[str, CatVTONLoRAEngine] = {}
+engines: Dict[str, Any] = {}
 
-def get_engine(domain: str) -> CatVTONLoRAEngine:
+def get_engine(domain: str) -> Optional[Any]:
+    if CatVTONLoRAEngine is None:
+        return None
     clean_domain = "indian_ethnic" if domain in ("indian", "ethnic", "ethnic_wear", "indian_ethnic") else "western"
     if clean_domain not in engines:
         engines[clean_domain] = CatVTONLoRAEngine(domain=clean_domain)
@@ -152,8 +176,8 @@ def list_supported_categories():
 def home():
     replacer_dist = PROJECT_ROOT / "nutz-replacer" / "dist"
     if replacer_dist.exists():
-        return RedirectResponse(url="/replacer")
-    return RedirectResponse(url="/studio")
+        return RedirectResponse(url="/replacer/")
+    return RedirectResponse(url="/studio/")
 
 @app.get("/health")
 def health_check():

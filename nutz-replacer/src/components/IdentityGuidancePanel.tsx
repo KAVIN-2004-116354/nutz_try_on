@@ -39,7 +39,7 @@ export const IdentityGuidancePanel: React.FC = () => {
       {isOpen && (
         <div className="mt-3.5 pt-3.5 border-t border-white/10 text-[11px] space-y-2 text-slate-300 animate-fadeIn">
           <p className="font-medium text-slate-200">
-            MediaPipe landmark shields strictly protect identity during FLUX synthesis:
+            Precision anatomical modeling strictly preserves identity during fitting:
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-0.5">
             <li className="flex items-center gap-1.5 bg-white/[0.02] p-2 rounded-lg border border-white/5">

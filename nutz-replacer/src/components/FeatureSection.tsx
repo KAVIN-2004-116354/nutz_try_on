@@ -1,52 +1,52 @@
 import React from 'react';
-import { Sparkles, ShieldCheck, Palette, Layers, Cpu, Eye } from 'lucide-react';
+import { Scissors, ShieldCheck, Palette, Layers, Compass, Eye } from 'lucide-react';
 
 export const FeatureSection: React.FC = () => {
   const features = [
     {
-      icon: <Sparkles className="w-5 h-5 text-[#5B3DF0]" />,
-      title: 'AI-Powered Virtual Try-On',
-      description: 'Powered exclusively by FLUX-DEV-012 on Nutz Cloud for state-of-the-art diffusion try-on synthesis.',
+      icon: <Scissors className="w-5 h-5 text-[#171717]" />,
+      title: 'Photorealistic Drape & Tailoring',
+      description: 'True-to-life textile drape modeled to exact model anatomy with natural folds, seams, and fabric tension.',
     },
     {
-      icon: <Palette className="w-5 h-5 text-[#5B3DF0]" />,
-      title: 'Garment Reference Preservation',
-      description: 'Dual-panel spatial conditioning preserves all prints, stripes, character motifs, buttons, and embroidery.',
+      icon: <Palette className="w-5 h-5 text-[#171717]" />,
+      title: 'Garment Weave Retention',
+      description: 'Preserves micro-florals, yarn patterns, checks, buttons, embroidery, and silk sheen with microscopic accuracy.',
     },
     {
       icon: <ShieldCheck className="w-5 h-5 text-[#16A34A]" />,
-      title: 'Identity-Aware Transformation',
-      description: 'Strict anatomical boundary guards lock facial identity, skin tone, hair, shoulder width, and pose.',
+      title: 'Identity & Complexion Lock',
+      description: 'Strict anatomical guards lock facial likeness, skin complexion, hair volume, shoulder slope, and natural posture.',
     },
     {
-      icon: <Layers className="w-5 h-5 text-[#5B3DF0]" />,
-      title: '17 Universal Clothing Categories',
-      description: 'Pre-configured rules for T-Shirts, Shirts, Blazers, Kurta, Sherwani, Anarkali, Jeans, and Western Dresses.',
+      icon: <Layers className="w-5 h-5 text-[#171717]" />,
+      title: '17 Wardrobe Categories',
+      description: 'Dedicated fitting heuristics for Oxford Shirts, Tailored Blazers, Knitwear, Sarees, Kurtas, and Outerwear.',
     },
     {
-      icon: <Cpu className="w-5 h-5 text-[#5B3DF0]" />,
-      title: 'Dedicated Dual-Panel Latents',
-      description: 'Feeds uncompressed garment visual latents directly into diffusion self-attention without prompt contamination.',
+      icon: <Compass className="w-5 h-5 text-[#171717]" />,
+      title: 'Precision Stitch Alignment',
+      description: 'Maintains collar geometry, sleeve lengths, and garment hems with couture-level alignment.',
     },
     {
-      icon: <Eye className="w-5 h-5 text-[#5B3DF0]" />,
-      title: 'Interactive Before/After Slider',
-      description: 'Side-by-side and draggable split sliders give you complete transparency over the try-on transformation.',
+      icon: <Eye className="w-5 h-5 text-[#171717]" />,
+      title: 'Interactive Fitting Mirror',
+      description: 'Draggable 60fps split slider and HD loupe zoom give you complete transparency over fabric draping.',
     },
   ];
 
   return (
-    <section id="features" className="py-20 border-b border-[#E8E8EF] bg-[#F5F4F8] scroll-mt-20">
+    <section id="features" className="py-24 border-b border-[#EAE7E0] bg-[#F8F7F4] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5B3DF0] bg-[#F0EDFD] px-3 py-1 rounded-full border border-[#E8E8EF] mb-3 inline-block">
-            Engineering Precision
+          <span className="text-xs font-bold uppercase tracking-wider text-[#171717] bg-[#EFECE6] px-3.5 py-1.5 rounded-full border border-black/5 mb-3 inline-block">
+            Atelier Standards
           </span>
-          <h2 className="text-3xl font-extrabold text-[#171717] tracking-tight mb-4">
-            Built for High-Precision Fashion
+          <h2 className="text-3xl sm:text-5xl font-serif text-[#171717] tracking-tight mb-4">
+            Master Tailoring &amp; Digital Craft
           </h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Unlike generic generative tools, Nutz Replacer is specifically architected to satisfy commercial fashion and e-commerce standards.
+          <p className="text-sm text-slate-500 leading-relaxed font-normal">
+            Designed for digital fitting rooms, luxury lookbooks, and modern fashion houses demanding zero compromise on garment truth.
           </p>
         </div>
 
@@ -54,15 +54,15 @@ export const FeatureSection: React.FC = () => {
           {features.map((feat, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-2xl border border-[#E8E8EF] p-6 shadow-subtle hover:border-[#8F77F8] hover:shadow-card transition-all"
+              className="bg-white rounded-3xl border border-[#E8E8EF] p-7 shadow-card hover:border-[#171717]/40 hover:shadow-elevated transition-all duration-400 group hover:-translate-y-1"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#F0EDFD] flex items-center justify-center mb-4 border border-[#E8E8EF]">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5F4F8] flex items-center justify-center mb-5 border border-[#E8E8EF] group-hover:scale-110 transition-transform shadow-sm">
                 {feat.icon}
               </div>
-              <h3 className="text-base font-bold text-[#171717] mb-2">
+              <h3 className="text-lg font-extrabold text-[#171717] mb-2 group-hover:text-black transition-colors">
                 {feat.title}
               </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {feat.description}
               </p>
             </div>

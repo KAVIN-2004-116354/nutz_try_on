@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Download, RefreshCw, Trash2, ChevronDown, ChevronUp, 
-  Menu, X, Check, Sparkles, Layers 
+  Menu, X, Check, Shirt, Layers 
 } from 'lucide-react';
 import { ImageInputState, TryonResult, GenerationStatus, SamplePreset } from '../types';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS, FLUX_17_CATEGORIES } from '../presets';
@@ -295,9 +295,9 @@ export const MobileTryonArtboard: React.FC<MobileTryonArtboardProps> = ({
               </div>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 text-slate-600">
-                <Sparkles className="w-8 h-8 text-[#5B3DF0] mb-2" />
-                <p className="text-[14px] font-bold text-[#171717]">Ready for generation</p>
-                <p className="text-[13px] mt-1">Tap generate below to render your new look</p>
+                <Shirt className="w-8 h-8 text-[#171717] mb-2" />
+                <p className="text-[14px] font-bold text-[#171717]">Ready for Fitting</p>
+                <p className="text-[13px] mt-1 text-slate-500">Tap below to fit your chosen outfit</p>
               </div>
             )}
           </div>
@@ -574,23 +574,23 @@ export const MobileTryonArtboard: React.FC<MobileTryonArtboardProps> = ({
           {accordionOpen && (
             <div className="pt-3 space-y-2.5 border-t border-[#E8E8EF] mt-2 animate-fadeIn">
               <div className="p-3 bg-[#F5F4F8] rounded-[16px] border border-[#E8E8EF]">
-                <span className="text-[13px] font-bold text-[#5B3DF0]">01. Upload photo</span>
+                <span className="text-[13px] font-bold text-[#171717]">Model &amp; Anatomy</span>
                 <p className="text-[13px] text-slate-600 mt-0.5 leading-snug">
-                  Locks face, skin tone, hair, and body proportions as identity source of truth.
+                  Locks facial likeness, skin complexion, hair silhouette, and posture as ground truth.
                 </p>
               </div>
 
               <div className="p-3 bg-[#F5F4F8] rounded-[16px] border border-[#E8E8EF]">
-                <span className="text-[13px] font-bold text-[#5B3DF0]">02. Choose outfit</span>
+                <span className="text-[13px] font-bold text-[#171717]">Fabric &amp; Texture Mapping</span>
                 <p className="text-[13px] text-slate-600 mt-0.5 leading-snug">
-                  Extracts printed graphics, fabric weave, and color patterns into visual latents.
+                  Captures authentic textile weave, prints, buttons, and material luster.
                 </p>
               </div>
 
               <div className="p-3 bg-[#F5F4F8] rounded-[16px] border border-[#E8E8EF]">
-                <span className="text-[13px] font-bold text-[#5B3DF0]">03. Generate look</span>
+                <span className="text-[13px] font-bold text-[#171717]">Bespoke Virtual Fitting</span>
                 <p className="text-[13px] text-slate-600 mt-0.5 leading-snug">
-                  FLUX-DEV-012 dual-panel diffusion synthesizes the garment with photorealistic drape.
+                  Precision tailoring drapes the garment naturally with realistic folds and shadows.
                 </p>
               </div>
             </div>
@@ -607,7 +607,7 @@ export const MobileTryonArtboard: React.FC<MobileTryonArtboardProps> = ({
         {selectionChanged && !isGenerating && (
           <div className="mb-2 px-3 py-1.5 rounded-xl bg-[#F0EDFD] border border-[#5B3DF0]/30 text-[#5B3DF0] text-[13px] font-bold flex items-center justify-center gap-1.5 animate-fadeIn">
             <span className="w-2 h-2 rounded-full bg-[#5B3DF0] animate-pulse" />
-            <span>Selection changed • Tap to generate new look</span>
+            <span>Selection changed • Tap to fit new outfit</span>
           </div>
         )}
 
@@ -616,32 +616,32 @@ export const MobileTryonArtboard: React.FC<MobileTryonArtboardProps> = ({
           type="button"
           onClick={onGenerate}
           disabled={!canGenerate || isGenerating}
-          aria-label={isGenerating ? 'Generating look' : selectionChanged ? 'Generate new look' : resultImageUrl ? 'Generate again' : 'Generate look'}
-          className={`w-full h-[56px] rounded-xl font-bold text-[16px] transition-all flex items-center justify-center gap-2 shadow-premium cursor-pointer focus-visible:ring-2 focus-visible:ring-[#5B3DF0] focus-visible:ring-offset-2 focus-visible:outline-none ${
+          aria-label={isGenerating ? 'Fitting outfit' : selectionChanged ? 'Fit new outfit' : resultImageUrl ? 'Fit again' : 'Try on outfit'}
+          className={`w-full h-[56px] rounded-xl font-bold text-[16px] transition-all flex items-center justify-center gap-2 shadow-premium cursor-pointer focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 focus-visible:outline-none ${
             canGenerate && !isGenerating
-              ? 'bg-[#5B3DF0] hover:bg-[#4B2EE0] active:scale-[0.99] text-white'
+              ? 'bg-[#171717] hover:bg-black active:scale-[0.99] text-white'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
           }`}
         >
           {isGenerating ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Generating look...</span>
+              <span>Tailoring outfit...</span>
             </>
           ) : selectionChanged ? (
             <>
-              <Sparkles className="w-5 h-5" />
-              <span>Generate new look</span>
+              <Shirt className="w-5 h-5" />
+              <span>Fit New Outfit</span>
             </>
           ) : resultImageUrl ? (
             <>
               <RefreshCw className="w-5 h-5" />
-              <span>Generate again</span>
+              <span>Fit Again</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-5 h-5" />
-              <span>Generate look</span>
+              <Shirt className="w-5 h-5" />
+              <span>Try On Outfit</span>
             </>
           )}
         </button>
