@@ -10,22 +10,21 @@ interface NavbarProps {
   onOpenSettings?: () => void;
 }
 
-const NAV_ITEMS = [
-  { id: 'studio', label: 'Studio', href: '#tryon-workspace' },
-];
-
 export const Navbar: React.FC<NavbarProps> = ({
   historyCount,
   onOpenHistory,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('studio');
+  const [activeTab, setActiveTab] = useState<'studio' | 'history'>('studio');
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof NAV_ITEMS[0]) => {
-    e.preventDefault();
-    setActiveTab(item.id);
-    const target = document.querySelector(item.href);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+  const handleTabClick = (tabId: 'studio' | 'history') => {
+    setActiveTab(tabId);
+    if (tabId === 'studio') {
+      const target = document.querySelector('#tryon-workspace');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      onOpenHistory();
     }
   };
 
@@ -64,59 +63,65 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </a>
 
-        {/* Center Navigation Links - Sera UI Sliding Morph Pill */}
-        <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#F5F4F8] border border-[#E8E8EF] relative">
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <motion.a
-                key={item.id}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item)}
-                whileTap={{ scale: 0.94 }}
-                whileHover={{ scale: 1.02 }}
-                className={`relative px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
-                  isActive ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-active-pill"
-                    transition={{
-                      type: 'spring',
-                      stiffness: 420,
-                      damping: 32,
-                    }}
-                    className="absolute inset-0 bg-white rounded-full shadow-sm border border-black/5 -z-10"
-                  />
-                )}
-                <span>{item.label}</span>
-              </motion.a>
-            );
-          })}
-        </nav>
-
-        {/* Right Actions: Clean, Minimal, Non-AI */}
-        <div className="flex items-center gap-3">
-          {/* Gallery / Past Looks Button */}
+        {/* Center Navigation Links: Merged Studio & LookHistory with Sliding Morph Pill */}
+        <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#F5F4F8] border border-[#E8E8EF] relative shadow-sm">
+          {/* Studio Tab */}
           <motion.button
             type="button"
-            whileHover={{ y: -1, scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onOpenHistory}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-[#F5F4F8] border border-[#E8E8EF] text-xs font-bold text-[#171717] transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
-            title="View LookHistory"
+            onClick={() => handleTabClick('studio')}
+            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.02 }}
+            className={`relative px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
+              activeTab === 'studio' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+            }`}
           >
+            {activeTab === 'studio' && (
+              <motion.div
+                layoutId="navbar-active-pill"
+                transition={{
+                  type: 'spring',
+                  stiffness: 420,
+                  damping: 32,
+                }}
+                className="absolute inset-0 bg-white rounded-full shadow-sm border border-black/5 -z-10"
+              />
+            )}
+            <span>Studio</span>
+          </motion.button>
+
+          {/* LookHistory Tab */}
+          <motion.button
+            type="button"
+            onClick={() => handleTabClick('history')}
+            whileTap={{ scale: 0.94 }}
+            whileHover={{ scale: 1.02 }}
+            className={`relative flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
+              activeTab === 'history' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+            }`}
+          >
+            {activeTab === 'history' && (
+              <motion.div
+                layoutId="navbar-active-pill"
+                transition={{
+                  type: 'spring',
+                  stiffness: 420,
+                  damping: 32,
+                }}
+                className="absolute inset-0 bg-white rounded-full shadow-sm border border-black/5 -z-10"
+              />
+            )}
             <History className="w-3.5 h-3.5 text-slate-700" />
             <span>LookHistory</span>
             {historyCount > 0 && (
-              <span className="px-1.5 py-0.5 bg-[#171717] text-white rounded-full text-[10px] font-extrabold">
+              <span className="px-1.5 py-0.2 bg-[#171717] text-white rounded-full text-[10px] font-extrabold">
                 {historyCount}
               </span>
             )}
           </motion.button>
+        </nav>
 
-          {/* E-Commerce Store Demo Link */}
+        {/* Right Actions: Retail Demo Link */}
+        <div className="flex items-center gap-3">
           <motion.a
             href="/demo"
             target="_blank"
