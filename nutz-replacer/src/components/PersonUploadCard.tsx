@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { RefreshCw, Trash2, CheckCircle2, UserCheck, Camera } from 'lucide-react';
 import { ImageInputState, SamplePreset } from '../types';
 import { SAMPLE_PERSONS } from '../presets';
@@ -139,14 +140,16 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
             {SAMPLE_PERSONS.map((sample) => {
               const isSelected = person.previewUrl === sample.imageUrl;
               return (
-                <button
+                <motion.button
                   key={sample.id}
                   type="button"
+                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => selectPreset(sample)}
                   disabled={disabled}
-                  className={`group relative flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer ${
+                  className={`group relative flex-shrink-0 flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl border transition-colors duration-200 text-left cursor-pointer ${
                     isSelected
-                      ? 'bg-[#171717] border-[#171717] text-white shadow-md scale-[1.02]'
+                      ? 'bg-[#171717] border-[#171717] text-white shadow-md'
                       : 'bg-[#F9F9FC] border-[#E8E8EF] text-[#171717] hover:border-slate-300 hover:bg-white'
                   }`}
                 >
@@ -170,7 +173,7 @@ export const PersonUploadCard: React.FC<PersonUploadCardProps> = ({
                       {sample.gender === 'women' ? 'Female' : 'Male'}
                     </span>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>

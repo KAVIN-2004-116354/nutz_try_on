@@ -37,9 +37,6 @@ export const Footer: React.FC = () => {
         {/* Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-4">
           <p>© {new Date().getFullYear()} NUTZ Fitting Room. All rights reserved.</p>
-          <p className="font-mono text-[11px] text-slate-400">
-            Precision Fashion Atelier &amp; Virtual Try-On
-          </p>
         </div>
       </div>
     </footer>
