@@ -7,7 +7,9 @@ interface NavbarProps {
   cloudStatus: CloudStatus;
   historyCount: number;
   currentPage?: 'home' | 'studio' | 'history';
+  activeHeroTab?: 'studio' | 'history';
   onNavigate?: (page: 'home' | 'studio' | 'history') => void;
+  onSelectHeroTab?: (tab: 'studio' | 'history') => void;
   onOpenHistory?: () => void;
   onOpenSettings?: () => void;
   onOpenSignIn?: () => void;
@@ -18,17 +20,30 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   historyCount,
   currentPage = 'home',
+  activeHeroTab = 'studio',
   onNavigate,
+  onSelectHeroTab,
   onOpenHistory,
   onOpenSignIn,
   user,
   onSignOut,
 }) => {
+  const isStudioActive = currentPage === 'studio' || (currentPage === 'home' && activeHeroTab === 'studio');
+  const isHistoryActive = currentPage === 'history' || (currentPage === 'home' && activeHeroTab === 'history');
+
   const handleTabClick = (tabId: 'studio' | 'history') => {
-    if (onNavigate) {
-      onNavigate(tabId);
-    } else if (tabId === 'history' && onOpenHistory) {
-      onOpenHistory();
+    if (currentPage === 'home') {
+      if (onSelectHeroTab) {
+        onSelectHeroTab(tabId);
+      } else if (onNavigate) {
+        onNavigate(tabId);
+      }
+    } else {
+      if (onNavigate) {
+        onNavigate(tabId);
+      } else if (tabId === 'history' && onOpenHistory) {
+        onOpenHistory();
+      }
     }
   };
 
@@ -80,10 +95,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.94 }}
             whileHover={{ scale: 1.02 }}
             className={`relative px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
-              currentPage === 'studio' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+              isStudioActive ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
             }`}
           >
-            {currentPage === 'studio' && (
+            {isStudioActive && (
               <motion.div
                 layoutId="navbar-active-pill"
                 transition={{
@@ -104,10 +119,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.94 }}
             whileHover={{ scale: 1.02 }}
             className={`relative flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-full transition-colors duration-200 z-10 select-none cursor-pointer ${
-              currentPage === 'history' ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
+              isHistoryActive ? 'text-[#171717]' : 'text-slate-600 hover:text-[#171717]'
             }`}
           >
-            {currentPage === 'history' && (
+            {isHistoryActive && (
               <motion.div
                 layoutId="navbar-active-pill"
                 transition={{

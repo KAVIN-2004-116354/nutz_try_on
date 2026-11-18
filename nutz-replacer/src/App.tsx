@@ -146,6 +146,22 @@ export const App: React.FC = () => {
 
   // Current view page: 'home' (front page) vs 'studio' (fitting room + craft + standards) vs 'history'
   const [currentPage, setCurrentPage] = useState<'home' | 'studio' | 'history'>('home');
+  // Active Hero Tab on front page: 'studio' vs 'history'
+  const [activeHeroTab, setActiveHeroTab] = useState<'studio' | 'history'>('studio');
+  const [heroAnimTrigger, setHeroAnimTrigger] = useState<number>(0);
+
+  const handleSelectHeroTab = (tab: 'studio' | 'history') => {
+    if (currentPage === 'home') {
+      if (activeHeroTab === tab) {
+        handleNavigate(tab);
+      } else {
+        setActiveHeroTab(tab);
+        setHeroAnimTrigger((prev) => prev + 1);
+      }
+    } else {
+      handleNavigate(tab);
+    }
+  };
 
   // Synchronize URL hash with current view
   useEffect(() => {
@@ -352,7 +368,9 @@ export const App: React.FC = () => {
         cloudStatus={cloudStatus}
         historyCount={history.length}
         currentPage={currentPage}
+        activeHeroTab={activeHeroTab}
         onNavigate={handleNavigate}
+        onSelectHeroTab={handleSelectHeroTab}
         onOpenHistory={() => handleNavigate('history')}
         onOpenSignIn={() => setIsSignInOpen(true)}
         user={user}
@@ -365,6 +383,9 @@ export const App: React.FC = () => {
           <div>
             <HeroSection
               onEnterStudio={() => handleNavigate('studio', 'tryon-workspace')}
+              activeTab={activeHeroTab}
+              onTabChange={handleSelectHeroTab}
+              animTrigger={heroAnimTrigger}
             />
 
             {/* Sera UI Infinite Fashion Craft Marquee */}
