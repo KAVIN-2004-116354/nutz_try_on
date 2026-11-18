@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
             Standards
           </a>
           <a href="#gallery" className="hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none rounded">
-            Lookbook
+            LookHistory
           </a>
         </div>
 

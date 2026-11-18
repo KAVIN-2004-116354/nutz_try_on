@@ -12,9 +12,6 @@ interface NavbarProps {
 
 const NAV_ITEMS = [
   { id: 'studio', label: 'Studio', href: '#tryon-workspace' },
-  { id: 'wardrobe', label: 'Wardrobe', href: '#curated-wardrobe' },
-  { id: 'craft', label: 'Craft & Fit', href: '#how-it-works' },
-  { id: 'standards', label: 'Standards', href: '#features' },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -108,10 +105,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={onOpenHistory}
             className="px-4 py-2 rounded-xl bg-white hover:bg-[#F5F4F8] border border-[#E8E8EF] text-xs font-bold text-[#171717] transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
-            title="View Lookbook"
+            title="View LookHistory"
           >
             <History className="w-3.5 h-3.5 text-slate-700" />
-            <span>Lookbook</span>
+            <span>LookHistory</span>
             {historyCount > 0 && (
               <span className="px-1.5 py-0.5 bg-[#171717] text-white rounded-full text-[10px] font-extrabold">
                 {historyCount}
