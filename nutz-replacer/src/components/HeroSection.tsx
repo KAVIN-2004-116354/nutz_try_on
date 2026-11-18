@@ -41,9 +41,9 @@ export const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section ref={heroRef} className="relative overflow-hidden pt-16 pb-20 bg-gradient-to-b from-[#FAF9FD] via-[#F5F4F8] to-[#F5F4F8] border-b border-[#E8E8EF]">
-      {/* Soft ambient studio light */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[720px] h-[300px] bg-gradient-to-b from-[#EAE6F9]/60 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+    <section ref={heroRef} className="relative overflow-hidden pt-20 pb-24 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
+      {/* Soft warm ambient atelier lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[850px] h-[350px] bg-gradient-to-b from-[#F7F2E8]/70 via-[#EFE7D8]/30 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         {/* Master Headline: High-fashion editorial typography */}

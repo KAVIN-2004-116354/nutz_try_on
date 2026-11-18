@@ -188,11 +188,11 @@ export const GarmentUploadCard: React.FC<GarmentUploadCardProps> = ({
           onClick={() => !garment.previewUrl && fileInputRef.current?.click()}
           className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${
             garment.previewUrl
-              ? 'border border-[#E8E8EF] bg-slate-900 group cursor-default'
+              ? 'border border-[#E8E8EF] bg-[#F8F7F4] group cursor-default'
               : `border-2 border-dashed flex flex-col items-center justify-center p-8 cursor-pointer ${
                   isDragging
-                    ? 'border-[#171717] bg-slate-100 scale-[1.01]'
-                    : 'border-slate-200 hover:border-slate-400 hover:bg-[#F9F9FC]'
+                    ? 'border-[#171717] bg-[#F2EFE9] scale-[1.01]'
+                    : 'border-neutral-200 hover:border-neutral-400 hover:bg-[#FAF9F6]'
                 }`
           }`}
           style={{ minHeight: garment.previewUrl ? '340px' : '220px' }}

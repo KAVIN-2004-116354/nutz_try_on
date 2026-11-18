@@ -22,8 +22,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           aria-label="NUTZ home"
           className="flex items-center gap-3 group focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:outline-none rounded-xl"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#171717] text-white flex items-center justify-center font-black text-sm tracking-widest shadow-sm group-hover:scale-105 transition-transform duration-300">
-            N
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#E8E8EF] flex items-center justify-center p-1.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <img 
+              src="/nutz_acorn_logo.png" 
+              alt="NUTZ" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">

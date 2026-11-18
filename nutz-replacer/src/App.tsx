@@ -17,7 +17,6 @@ import { getCloudStatus, executeIntelligentTryon } from './services/api';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS } from './presets';
 import { triggerCelebration } from './services/confetti';
 import { AlertCircle, X, Layers } from 'lucide-react';
-import gsap from 'gsap';
 
 const CURATED_LOOKS = [
   {
@@ -159,20 +158,6 @@ export const App: React.FC = () => {
       setCurrentStage(1);
     }
   }, [generationStatus]);
-
-  // GSAP animation on workspace mount
-  useEffect(() => {
-    if (workspaceRef.current) {
-      gsap.from(workspaceRef.current.querySelectorAll('.studio-card'), {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'power3.out',
-        delay: 0.2,
-      });
-    }
-  }, []);
 
   const canGenerate = Boolean(person.previewUrl && garment.previewUrl);
 
@@ -355,7 +340,7 @@ export const App: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: Inputs */}
             <div className="lg:col-span-6 space-y-4">
-              <div className="studio-card">
+              <div>
                 <PersonUploadCard
                   person={person}
                   setPerson={setPerson}
@@ -364,14 +349,14 @@ export const App: React.FC = () => {
                 />
               </div>
 
-              <div className="studio-card">
+              <div>
                 <TryonBridge
                   hasPerson={Boolean(person.previewUrl)}
                   hasGarment={Boolean(garment.previewUrl)}
                 />
               </div>
 
-              <div className="studio-card">
+              <div>
                 <GarmentUploadCard
                   garment={garment}
                   setGarment={setGarment}
@@ -384,7 +369,7 @@ export const App: React.FC = () => {
             </div>
 
             {/* Right Column: Mirror Canvas */}
-            <div className="lg:col-span-6 sticky top-28 studio-card">
+            <div className="lg:col-span-6 sticky top-28">
               <ResultStage
                 person={person}
                 garment={garment}

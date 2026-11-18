@@ -36,13 +36,13 @@ export const FeatureSection: React.FC = () => {
   ];
 
   return (
-    <section id="features" className="py-24 border-b border-[#E8E8EF] bg-[#F5F4F8] scroll-mt-20">
+    <section id="features" className="py-24 border-b border-[#EAE7E0] bg-[#F8F7F4] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#171717] bg-[#E8E8EF] px-3.5 py-1.5 rounded-full border border-black/5 mb-3 inline-block">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#171717] bg-[#EFECE6] px-3.5 py-1.5 rounded-full border border-black/5 mb-3 inline-block">
             Atelier Standards
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#171717] tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl font-serif text-[#171717] tracking-tight mb-4">
             Master Tailoring &amp; Digital Craft
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed font-normal">

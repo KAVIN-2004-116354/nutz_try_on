@@ -5,16 +5,16 @@
 @layer base {
   /* Browser surfaces: selection, caret, and focus-visible */
   ::selection {
-    background-color: #F0EDFD;
-    color: #5B3DF0;
+    background-color: #171717;
+    color: #FFFFFF;
   }
 
   input, textarea {
-    caret-color: #5B3DF0;
+    caret-color: #171717;
   }
 
   :focus-visible {
-    outline: 2px solid #5B3DF0;
+    outline: 2px solid #171717;
     outline-offset: 2px;
   }
 
