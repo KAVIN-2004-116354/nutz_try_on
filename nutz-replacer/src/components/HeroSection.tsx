@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ShieldCheck, CheckCircle2, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WordCycle } from './ui/WordCycle';
 import { RadiantGrid } from './ui/RadiantGrid';
@@ -8,7 +8,7 @@ import { MagneticButton } from './ui/MagneticButton';
 
 export const HeroSection: React.FC = () => {
   return (
-    <section className="relative overflow-hidden pt-20 pb-24 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
+    <section className="relative overflow-hidden pt-20 pb-16 bg-gradient-to-b from-[#FDFCFB] via-[#F8F7F4] to-[#F3EFEA] border-b border-[#EAE7E0]">
       {/* Sera UI Interactive Radiant Grid & Ambient Lighting */}
       <RadiantGrid />
 
@@ -66,7 +66,7 @@ export const HeroSection: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <MagneticButton href="#tryon-workspace">
             <div className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-[#171717] hover:bg-[#2A2A38] text-white font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 group">
@@ -81,46 +81,6 @@ export const HeroSection: React.FC = () => {
               <ChevronDown className="w-4 h-4 text-slate-400 group-hover:translate-y-0.5 transition-transform" />
             </div>
           </MagneticButton>
-        </motion.div>
-
-        {/* Real Fashion Standards Pillars */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-left"
-        >
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EAE7E0] shadow-sm hover:border-[#171717]/30 hover:shadow-md transition-all">
-            <div className="flex items-center gap-2 text-[#16A34A] mb-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Identity Lock</span>
-            </div>
-            <p className="text-xs font-bold text-[#171717]">100% Face &amp; Pose Preserved</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EAE7E0] shadow-sm hover:border-[#171717]/30 hover:shadow-md transition-all">
-            <div className="flex items-center gap-2 text-[#171717] mb-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Fabric Truth</span>
-            </div>
-            <p className="text-xs font-bold text-[#171717]">True Weave &amp; Embroidery</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EAE7E0] shadow-sm hover:border-[#171717]/30 hover:shadow-md transition-all">
-            <div className="flex items-center gap-2 text-[#171717] mb-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Natural Drape</span>
-            </div>
-            <p className="text-xs font-bold text-[#171717]">Photographic Tension Lines</p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#EAE7E0] shadow-sm hover:border-[#171717]/30 hover:shadow-md transition-all">
-            <div className="flex items-center gap-2 text-[#171717] mb-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Silhouettes</span>
-            </div>
-            <p className="text-xs font-bold text-[#171717]">17 Dedicated Apparel Cuts</p>
-          </div>
         </motion.div>
       </div>
     </section>
