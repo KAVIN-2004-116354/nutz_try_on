@@ -25,6 +25,7 @@ from src.database.schemas import (
     UserUpdate,
     TokenResponse,
     ClientCreate,
+    ClientStatusUpdate,
     ClientResponse,
     ApiKeyCreate,
     ApiKeyCreatedResponse,
@@ -124,7 +125,7 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
         email=clean_email,
         password_hash=password_hash,
         phone=user_in.phone.strip() if user_in.phone else None,
-        role=user_in.role or "user",
+        role="user",
         is_active=True,
         email_verified=False,
         created_at=now_utc,
@@ -135,18 +136,6 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
-    # If role is client, automatically create linked Client profile
-    if new_user.role == "client":
-        client_profile = Client(
-            user_id=new_user.id,
-            company_name=clean_name,
-            contact_email=clean_email,
-            phone=new_user.phone,
-            account_status="active",
-        )
-        db.add(client_profile)
-        db.commit()
 
     # Create verification token record (24 hour expiry)
     raw_vtoken, vtoken_hash = generate_action_token()
@@ -621,6 +610,10 @@ def create_client_profile(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """
+    Submits a client organization onboarding request for the current user.
+    Initial account status is set to 'pending' awaiting administrator approval.
+    """
     existing_client = db.query(Client).filter(Client.user_id == current_user.id).first()
     if existing_client:
         raise HTTPException(
@@ -628,10 +621,7 @@ def create_client_profile(
             detail="A client organization is already associated with this account"
         )
 
-    # Automatically upgrade role to client if user
-    if current_user.role == "user":
-        current_user.role = "client"
-
+    # Initial onboarding status is strictly 'pending'
     client = Client(
         user_id=current_user.id,
         company_name=client_in.company_name.strip(),
@@ -639,7 +629,7 @@ def create_client_profile(
         contact_email=client_in.contact_email or current_user.email,
         phone=client_in.phone or current_user.phone,
         business_type=client_in.business_type,
-        account_status="active",
+        account_status="pending",
     )
     db.add(client)
     db.commit()
@@ -652,7 +642,76 @@ def create_client_profile(
     response_model=ClientResponse,
     summary="Retrieve current client organization profile"
 )
-def get_my_client_profile(client: Client = Depends(get_authenticated_client)):
+def get_my_client_profile(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Returns the client organization profile associated with the current user."""
+    client = db.query(Client).filter(Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No client profile found for current user account. Please create a client profile first."
+        )
+    return ClientResponse.model_validate(client)
+
+
+# ============================================================================
+# Administrative Platform Management (Admin only)
+# ============================================================================
+
+@router.get(
+    "/admin/clients",
+    response_model=List[ClientResponse],
+    summary="List all client organizations (Admin only)"
+)
+def list_all_clients_admin(
+    current_user: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db),
+    status_filter: Optional[str] = None
+):
+    """Lists all client organizations. Restricted to administrators."""
+    query = db.query(Client)
+    if status_filter:
+        query = query.filter(Client.account_status == status_filter.strip().lower())
+    clients = query.order_by(desc(Client.created_at)).all()
+    return [ClientResponse.model_validate(c) for c in clients]
+
+
+@router.patch(
+    "/admin/clients/{client_id}/status",
+    response_model=ClientResponse,
+    summary="Update client organization approval status (Admin only)"
+)
+def update_client_status_admin(
+    client_id: uuid.UUID,
+    status_in: ClientStatusUpdate,
+    current_user: User = Depends(require_role(["admin"])),
+    db: Session = Depends(get_db)
+):
+    """
+    Approves, suspends, or resets client organization status (pending -> approved -> suspended).
+    When approved, elevates the associated user account to role 'client'.
+    Restricted to authorized platform administrators.
+    """
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client organization not found"
+        )
+
+    new_status = status_in.account_status.strip().lower()
+    client.account_status = new_status
+    client.updated_at = datetime.now(timezone.utc)
+
+    # When approved, elevate associated user to role 'client'
+    if new_status == "approved" and client.user and client.user.role == "user":
+        client.user.role = "client"
+        client.user.updated_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(client)
     return ClientResponse.model_validate(client)
 
 

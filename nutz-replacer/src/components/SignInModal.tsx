@@ -119,7 +119,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
         email: registerEmail.trim(),
         phone: phone.trim() || undefined,
         password: registerPassword,
-        role: 'user',
       });
 
       setSuccessMessage('Account created! A verification link has been sent to your email.');

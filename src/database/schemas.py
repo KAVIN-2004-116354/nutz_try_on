@@ -14,7 +14,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=128, description="Plaintext password")
-    role: Optional[str] = Field("user", pattern="^(admin|client|user)$", description="Assigned role")
 
 
 class UserLogin(BaseModel):
@@ -52,6 +51,10 @@ class ClientBase(BaseModel):
 
 class ClientCreate(ClientBase):
     pass
+
+
+class ClientStatusUpdate(BaseModel):
+    account_status: str = Field(..., pattern="^(pending|approved|suspended)$", description="Target client status")
 
 
 class ClientResponse(ClientBase):
