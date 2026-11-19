@@ -111,3 +111,34 @@ export interface SamplePreset {
   imageUrl: string;
   promptHint?: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  full_name: string;
+  phone?: string | null;
+  role: 'admin' | 'client' | 'user' | string;
+  is_active: boolean;
+  email_verified: boolean;
+  created_at?: string;
+  last_login?: string | null;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token: string;
+  token_type: string;
+  user: UserProfile;
+}
+
+export interface ServerTryonHistoryItem {
+  id: string;
+  user_id: string;
+  client_id?: string | null;
+  garment_category?: string | null;
+  input_image_reference?: string | null;
+  output_image_reference?: string | null;
+  generation_status: string;
+  created_at: string;
+}

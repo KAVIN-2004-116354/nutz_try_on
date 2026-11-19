@@ -38,6 +38,10 @@ try:
 except Exception:
     def generate_intelligent_replacement_mask(*args, **kwargs): return (None, None)
 
+from src.database.connection import SessionLocal
+from src.database.service import resolve_user_from_headers, record_tryon_history_and_usage
+from src.auth.routes import router as auth_router
+
 # Export DOMAIN_CHECKPOINTS for test and client compatibility
 DOMAIN_CHECKPOINTS = CatVTONLoRAEngine.CHECKPOINTS if CatVTONLoRAEngine else {
     "indian_ethnic": str(PROJECT_ROOT / "experiments/lora_outputs/catvton_lora_indian_ethnic_rtx5050.safetensors"),
@@ -88,40 +92,20 @@ metrics = {
     "latencies": []
 }
 
+# Mount Production-Grade Authentication & Client API Router
+app.include_router(auth_router)
+
 @app.get("/login")
 def login_page():
     return FileResponse(frontend_dir / "login.html")
 
-@app.post("/api/v1/auth/login")
-async def auth_login(request: Request):
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    email = body.get("email", "admin@nutz.ai")
-    name = email.split("@")[0].replace(".", " ").replace("-", " ").replace("_", " ").title()
-    role = "ML Systems Engineer" if "admin" in email else "Senior Fashion Stylist & Buyer"
-    return JSONResponse({
-        "token": f"nutz_jwt_{int(time.time()*1000)}",
-        "user": {
-            "email": email,
-            "name": name,
-            "role": role,
-            "avatar": f"https://api.dicebear.com/7.x/bottts/svg?seed={name}",
-            "organization": "Nutz AI Enterprises"
-        }
-    })
-
-@app.get("/api/v1/auth/me")
-def auth_me():
-    return {
-        "authenticated": True,
-        "user": {
-            "email": "admin@nutz.ai",
-            "name": "Admin",
-            "role": "ML Systems Engineer"
-        }
-    }
+@app.get("/reset-password")
+@app.get("/verify-email")
+def spa_auth_routes():
+    index_file = replacer_dist / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return RedirectResponse(url="/replacer")
 
 @app.get("/demo")
 def demo_store():
@@ -417,6 +401,26 @@ async def _execute_tryon_request(request: Request, forced_engine: Optional[str] 
     buf = io.BytesIO()
     result["tryon_image"].save(buf, format="PNG")
     b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+    # Record database history & usage if user is authenticated
+    db_session = SessionLocal()
+    try:
+        req_user = resolve_user_from_headers(request.headers, db_session)
+        if req_user:
+            client_id = req_user.client.id if getattr(req_user, "client", None) else None
+            record_tryon_history_and_usage(
+                user_id=req_user.id,
+                client_id=client_id,
+                garment_category=clean_domain,
+                input_image_reference=f"domain:{clean_domain}",
+                output_image_reference=f"/outputs/{out_filename}",
+                generation_status="completed",
+                operation_type="flux_tryon"
+            )
+    except Exception as db_err:
+        print(f"[Database Tracking Error]: {db_err}")
+    finally:
+        db_session.close()
 
     return JSONResponse({
         "status": "success",
@@ -716,6 +720,27 @@ async def generate_intelligent_tryon(request: Request):
     latency_sec = round(time.time() - start_time, 2)
     metrics["successful_renders"] += 1
     metrics["latencies"].append(latency_sec)
+
+    # Record database history & usage if user is authenticated
+    db_session = SessionLocal()
+    try:
+        req_user = resolve_user_from_headers(request.headers, db_session)
+        if req_user:
+            client_id = req_user.client.id if getattr(req_user, "client", None) else None
+            garment_cat = grok_res.get("category") if isinstance(grok_res, dict) else category
+            record_tryon_history_and_usage(
+                user_id=req_user.id,
+                client_id=client_id,
+                garment_category=garment_cat or "garment",
+                input_image_reference=f"garment:{garment_filename}",
+                output_image_reference=f"/outputs/{out_filename}",
+                generation_status="completed",
+                operation_type="intelligent_tryon"
+            )
+    except Exception as db_err:
+        print(f"[Database Tracking Error]: {db_err}")
+    finally:
+        db_session.close()
 
     return JSONResponse({
         "status": "success",

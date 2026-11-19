@@ -1,21 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, ArrowRight, CheckCircle2, User } from 'lucide-react';
+import { X, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Sparkles, KeyRound, ArrowLeft } from 'lucide-react';
+import { loginUser, registerUser, forgotPassword } from '../services/api';
 
 interface SignInModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (user: { email: string; name: string }) => void;
+  onSuccess?: (user: { email: string; name: string; role?: string; id?: string }) => void;
+  initialTab?: 'signin' | 'register' | 'forgot';
 }
 
 export const SignInModal: React.FC<SignInModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  initialTab = 'signin',
 }) => {
-  const [email, setEmail] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [tab, setTab] = useState<'signin' | 'register' | 'forgot'>(initialTab);
+
+  // Sign In fields
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Register fields
+  const [fullName, setFullName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+
+  // Forgot password field
+  const [forgotEmail, setForgotEmail] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -27,42 +51,124 @@ export const SignInModal: React.FC<SignInModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Clear feedback when switching tabs
+  useEffect(() => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  }, [tab]);
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) return;
+    if (!loginEmail || !loginPassword) {
+      setErrorMessage('Please enter both email and password.');
+      return;
+    }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-      const name = email.split('@')[0];
-      const capitalized = name.charAt(0).toUpperCase() + name.slice(1);
-      setTimeout(() => {
-        onSuccess?.({ email, name: capitalized });
-        setIsSubmitted(false);
-        setEmail('');
-        onClose();
-      }, 900);
-    }, 600);
-  };
+    setErrorMessage(null);
 
-  const handleGoogleSignIn = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
+    try {
+      const response = await loginUser({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      setSuccessMessage('Authentication verified. Welcome back to NUTZ Atelier.');
+      const user = response.user;
+      const displayName = user.full_name || user.name || loginEmail.split('@')[0];
+
       setTimeout(() => {
-        onSuccess?.({ email: 'client@atelier.nutz', name: 'Atelier Patron' });
-        setIsSubmitted(false);
+        onSuccess?.({
+          id: user.id,
+          email: user.email,
+          name: displayName,
+          role: user.role,
+        });
+        setIsLoading(false);
+        setSuccessMessage(null);
+        setLoginEmail('');
+        setLoginPassword('');
         onClose();
       }, 700);
-    }, 500);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Invalid email or password. Please try again.');
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !registerEmail || !registerPassword) {
+      setErrorMessage('Full name, email, and password are required.');
+      return;
+    }
+
+    if (registerPassword.length < 8) {
+      setErrorMessage('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await registerUser({
+        full_name: fullName.trim(),
+        email: registerEmail.trim(),
+        phone: phone.trim() || undefined,
+        password: registerPassword,
+        role: 'user',
+      });
+
+      setSuccessMessage('Account created! A verification link has been sent to your email.');
+      const user = response.user;
+      const displayName = user.full_name || user.name || registerEmail.split('@')[0];
+
+      setTimeout(() => {
+        onSuccess?.({
+          id: user.id,
+          email: user.email,
+          name: displayName,
+          role: user.role,
+        });
+        setIsLoading(false);
+        setSuccessMessage(null);
+        setFullName('');
+        setRegisterEmail('');
+        setPhone('');
+        setRegisterPassword('');
+        onClose();
+      }, 900);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Registration failed. Please check your details.');
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setErrorMessage('Please enter your email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await forgotPassword(forgotEmail.trim());
+      setIsLoading(false);
+      setSuccessMessage(res.message || 'If this email is registered, password reset instructions have been sent.');
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Failed to request password reset. Please try again later.');
+    }
   };
 
   const handleGuestSignIn = () => {
-    onSuccess?.({ email: 'guest@nutz.ai', name: 'Guest Fitting' });
+    onSuccess?.({ email: 'guest@nutz.ai', name: 'Guest Atelier Client' });
     onClose();
   };
 
@@ -90,7 +196,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close sign in modal"
+            aria-label="Close modal"
             className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#F5F4F8] hover:bg-[#EAE8F2] text-slate-500 hover:text-[#171717] flex items-center justify-center transition-colors cursor-pointer z-10"
           >
             <X className="w-4 h-4" />
@@ -98,7 +204,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
           <div className="p-8 sm:p-10 text-center">
             {/* Acorn Brand Mark */}
-            <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-[#F8F7F4] border border-[#EAE7E0] flex items-center justify-center p-2.5 shadow-sm">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#F8F7F4] border border-[#EAE7E0] flex items-center justify-center p-2.5 shadow-sm">
               <img
                 src="/nutz_acorn_logo.png"
                 alt="NUTZ Fitting Room"
@@ -108,102 +214,241 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
             {/* Header */}
             <h2 className="text-2xl font-serif text-[#171717] tracking-tight">
-              Sign In to NUTZ
+              {tab === 'signin' && 'Sign In to NUTZ'}
+              {tab === 'register' && 'Create Your NUTZ Account'}
+              {tab === 'forgot' && 'Reset Your Password'}
             </h2>
-            <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-              Access your personal fittings, curated wardrobe, and high-fidelity tailoring drape history.
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+              {tab === 'signin' && 'Access your personal fittings, curated wardrobe, and try-on history.'}
+              {tab === 'register' && 'Join NUTZ Atelier for private session memory and enterprise fitting.'}
+              {tab === 'forgot' && 'Enter your registered email to receive a secure, single-use reset link.'}
             </p>
 
-            {isSubmitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="my-8 p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-center"
-              >
-                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-600" />
-                <p className="font-bold text-sm text-emerald-950">Welcome to NUTZ Atelier</p>
-                <p className="text-xs text-emerald-700 mt-1">Your wardrobe session has been activated.</p>
-              </motion.div>
-            ) : (
-              <div className="mt-8 space-y-4 text-left">
-                {/* Google Sign In Button */}
+            {/* Tab Selector (for signin & register) */}
+            {tab !== 'forgot' ? (
+              <div className="flex bg-[#F5F4F8] rounded-2xl p-1 mt-5 border border-[#EAE7E0]">
                 <button
                   type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-2xl border border-[#EAE7E0] bg-white hover:bg-[#F9F9FC] text-[#171717] font-bold text-xs shadow-sm hover:border-slate-300 transition-all duration-200 cursor-pointer"
+                  onClick={() => setTab('signin')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    tab === 'signin'
+                      ? 'bg-white text-[#171717] shadow-sm'
+                      : 'text-slate-500 hover:text-[#171717]'
+                  }`}
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
+                  Sign In
                 </button>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 h-px bg-[#EAE7E0]" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    or with email
-                  </span>
-                  <div className="flex-1 h-px bg-[#EAE7E0]" />
-                </div>
-
-                {/* Email Form */}
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@fashionatelier.com"
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading || !email}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white font-bold text-xs shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
-                  >
-                    <span>{isLoading ? 'Authenticating...' : 'Sign In with Email'}</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
-                </form>
-
-                {/* Guest Quick Mode */}
-                <div className="pt-2 text-center">
-                  <button
-                    type="button"
-                    onClick={handleGuestSignIn}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-[#171717] transition-colors cursor-pointer"
-                  >
-                    <User className="w-3 h-3" />
-                    <span>Continue as Guest Atelier Client</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setTab('register')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    tab === 'register'
+                      ? 'bg-white text-[#171717] shadow-sm'
+                      : 'text-slate-500 hover:text-[#171717]'
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 text-left">
+                <button
+                  type="button"
+                  onClick={() => setTab('signin')}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#171717] transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Sign In</span>
+                </button>
               </div>
             )}
 
+            {/* Error Banner */}
+            {errorMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs text-left flex items-start gap-2"
+              >
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
+              </motion.div>
+            )}
+
+            {/* Success Banner */}
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="my-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-center"
+              >
+                <CheckCircle2 className="w-7 h-7 mx-auto mb-1.5 text-emerald-600" />
+                <p className="font-bold text-xs text-emerald-950">Notice</p>
+                <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">{successMessage}</p>
+              </motion.div>
+            )}
+
+            {/* FORMS */}
+            {!successMessage || tab === 'forgot' ? (
+              <div className="mt-5 space-y-4 text-left">
+                {/* SIGN IN FORM */}
+                {tab === 'signin' && (
+                  <form onSubmit={handleLoginSubmit} className="space-y-3">
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="name@fashionatelier.com"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Password"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="flex justify-end pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setTab('forgot')}
+                        className="text-[11px] font-semibold text-slate-500 hover:text-[#171717] transition-colors cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading || !loginEmail || !loginPassword}
+                      className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white font-bold text-xs shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group mt-1"
+                    >
+                      <span>{isLoading ? 'Verifying Credentials...' : 'Sign In with Email'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </form>
+                )}
+
+                {/* REGISTER FORM */}
+                {tab === 'register' && (
+                  <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Full Name (e.g. Eleanor Vance)"
+                        required
+                        minLength={2}
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        placeholder="Email Address"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Phone Number (Optional)"
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={registerPassword}
+                        onChange={(e) => setRegisterPassword(e.target.value)}
+                        placeholder="Create Password (min. 8 characters)"
+                        required
+                        minLength={8}
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading || !fullName || !registerEmail || !registerPassword}
+                      className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white font-bold text-xs shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group mt-2"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{isLoading ? 'Creating Account...' : 'Create Account'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </form>
+                )}
+
+                {/* FORGOT PASSWORD FORM */}
+                {tab === 'forgot' && (
+                  <form onSubmit={handleForgotSubmit} className="space-y-3">
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="Registered Email Address"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#EAE7E0] bg-[#FAF9F6] text-xs text-[#171717] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#171717] focus:bg-white transition-all font-medium"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading || !forgotEmail}
+                      className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white font-bold text-xs shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-indigo-300" />
+                      <span>{isLoading ? 'Sending Instructions...' : 'Send Reset Link'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </form>
+                )}
+
+                {/* Guest Quick Mode */}
+                {tab !== 'forgot' && (
+                  <div className="pt-2 text-center border-t border-[#EAE7E0]/60">
+                    <button
+                      type="button"
+                      onClick={handleGuestSignIn}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-[#171717] transition-colors cursor-pointer"
+                    >
+                      <User className="w-3 h-3" />
+                      <span>Continue as Guest Atelier Client</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
             {/* Footer Disclaimer */}
             <p className="text-[10px] text-slate-400 mt-6 leading-relaxed">
-              By continuing, you agree to NUTZ Tailoring Terms of Service &amp; Privacy Policy.
+              Secured with Argon2id password encryption &amp; PostgreSQL persistence.
             </p>
           </div>
         </motion.div>
