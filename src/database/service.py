@@ -41,7 +41,12 @@ def resolve_user_from_headers(headers: Any, db: Session) -> Optional[User]:
         ).first()
 
         if credential and (credential.expires_at is None or credential.expires_at > now):
-            if credential.client and credential.client.user and credential.client.user.is_active:
+            if (
+                credential.client
+                and credential.client.account_status in ("approved", "active")
+                and credential.client.user
+                and credential.client.user.is_active
+            ):
                 return credential.client.user
 
     return None

@@ -36,6 +36,7 @@ from src.services.email_service import (
     validate_smtp_configuration,
     get_smtp_settings,
 )
+from src.database.service import resolve_user_from_headers
 
 client = TestClient(app)
 
@@ -203,21 +204,39 @@ def test_auth_me_endpoint():
     assert profile["user"]["name"] == "Valentino Garavani"
 
 
-def test_client_and_api_key_lifecycle():
-    """Test Client profile registration, secure API key generation and revocation."""
+def test_client_and_api_key_lifecycle(db):
+    """Test Client profile registration, admin approval, secure API key generation and revocation."""
     email = f"brand_{uuid.uuid4().hex[:8]}@couture.com"
     reg = client.post("/api/v1/auth/register", json={
         "full_name": "Kering Brand Director",
         "email": email,
         "password": "LuxuryBrandPassword123!",
-        "role": "client"
     })
     token = reg.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
+    # Register client organization through authenticated client onboarding endpoint (status is pending)
+    create_client = client.post("/api/v1/clients", json={"company_name": "Kering Brand Director"}, headers=headers)
+    assert create_client.status_code == 201
+    client_id = create_client.json()["id"]
+    assert create_client.json()["account_status"] == "pending"
+
+    # Authorized administrator approves client organization
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={"sub": str(admin_user.id), "email": admin_user.email, "role": "admin"})
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    approve_res = client.patch(
+        f"/api/v1/admin/clients/{client_id}/status",
+        json={"account_status": "approved"},
+        headers=admin_headers
+    )
+    assert approve_res.status_code == 200
+    assert approve_res.json()["account_status"] == "approved"
+
     client_res = client.get("/api/v1/clients/me", headers=headers)
     assert client_res.status_code == 200
     assert client_res.json()["company_name"] == "Kering Brand Director"
+    assert client_res.json()["account_status"] == "approved"
 
     key_res = client.post("/api/v1/api-keys", json={"name": "Production Storefront Key"}, headers=headers)
     assert key_res.status_code == 201
@@ -941,3 +960,462 @@ def test_req_11_frontend_api_integration():
     logout_data = logout_res.json()
     assert logout_data["status"] == "success"
     assert "logged out" in logout_data["message"].lower()
+
+
+# ============================================================================
+# Privilege Escalation & Role Security Test Suite (Tests 1-6)
+# ============================================================================
+
+def test_security_1_normal_registration_assigns_user_role(db):
+    """Test 1: Normal registration without specifying role assigns 'user' role in database."""
+    email = f"normal_sec_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg = client.post("/api/v1/auth/register", json={
+        "full_name": "Standard Patron",
+        "email": email,
+        "phone": "+1-555-0199",
+        "password": "ValidPassword2026!"
+    })
+    assert reg.status_code == 201
+    data = reg.json()
+    assert data["user"]["role"] == "user"
+
+    # Query directly from PostgreSQL database
+    user_id = uuid.UUID(data["user"]["id"])
+    db_user = db.query(User).filter(User.id == user_id).first()
+    assert db_user is not None
+    assert db_user.role == "user"
+
+    # Verify JWT role claim
+    decoded = decode_access_token(data["access_token"])
+    assert decoded["role"] == "user"
+
+
+def test_security_2_admin_privilege_escalation_attempt_prevented(db):
+    """Test 2: Attempting to register as 'admin' must never create an administrator account."""
+    email = f"exploit_admin_{uuid.uuid4().hex[:8]}@nutz.ai"
+    payload = {
+        "full_name": "Exploit Admin",
+        "email": email,
+        "password": "StrongPassword123!",
+        "role": "admin"
+    }
+    res = client.post("/api/v1/auth/register", json=payload)
+    if res.status_code == 201:
+        # Extra field was ignored by Pydantic; role must still strictly be 'user'
+        data = res.json()
+        assert data["user"]["role"] == "user", "Public registration must never assign admin role"
+        user_id = uuid.UUID(data["user"]["id"])
+        db_user = db.query(User).filter(User.id == user_id).first()
+        assert db_user.role == "user", "Database role must strictly be 'user'"
+        decoded = decode_access_token(data["access_token"])
+        assert decoded["role"] == "user"
+    else:
+        # Schema rejected extra field with 422
+        assert res.status_code == 422
+
+
+def test_security_3_client_privilege_escalation_attempt_prevented(db):
+    """Test 3: Attempting to register as 'client' must never create a client account."""
+    email = f"exploit_client_{uuid.uuid4().hex[:8]}@nutz.ai"
+    payload = {
+        "full_name": "Exploit Client",
+        "email": email,
+        "password": "StrongPassword123!",
+        "role": "client"
+    }
+    res = client.post("/api/v1/auth/register", json=payload)
+    if res.status_code == 201:
+        data = res.json()
+        assert data["user"]["role"] == "user", "Public registration must never assign client role"
+        user_id = uuid.UUID(data["user"]["id"])
+        db_user = db.query(User).filter(User.id == user_id).first()
+        assert db_user.role == "user", "Database role must strictly be 'user'"
+        # Verify no client organization was automatically created
+        client_org = db.query(Client).filter(Client.user_id == user_id).first()
+        assert client_org is None, "No client profile should be created from public registration"
+    else:
+        assert res.status_code == 422
+
+
+def test_security_4_existing_admin_preservation(db):
+    """Test 4: Verify existing authorized administrator retains 'admin' role in database."""
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    assert admin_user is not None, "At least one authorized administrator account must exist"
+    assert admin_user.role == "admin"
+    assert admin_user.is_active is True
+
+
+def test_security_5_profile_update_cannot_escalate_role(db):
+    """Test 5: Attempting to update role through profile-update APIs is rejected/ignored."""
+    email = f"profile_role_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg = client.post("/api/v1/auth/register", json={
+        "full_name": "Normal Patron",
+        "email": email,
+        "password": "Password12345!"
+    })
+    assert reg.status_code == 201
+    jwt_token = reg.json()["access_token"]
+    user_id = uuid.UUID(reg.json()["user"]["id"])
+
+    # Attempt to elevate role to admin via PUT /api/v1/auth/me
+    headers = {"Authorization": f"Bearer {jwt_token}"}
+    update_res = client.put("/api/v1/auth/me", json={
+        "full_name": "Normal Patron Updated",
+        "role": "admin"
+    }, headers=headers)
+
+    # Regardless of whether 200 (extra field ignored) or 422 (extra field rejected), DB role must remain 'user'
+    if update_res.status_code == 200:
+        assert update_res.json()["role"] == "user"
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+    db.refresh(db_user)
+    assert db_user.role == "user", "Database role must not be altered by profile update API"
+
+
+def test_security_6_role_based_authorization_enforcement(db):
+    """Test 6: Role authorization enforces 403 on unauthorized roles and 200 on authorized admin."""
+    # 1. Normal user with role 'user'
+    user_email = f"auth_user_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg_u = client.post("/api/v1/auth/register", json={
+        "full_name": "Regular User",
+        "email": user_email,
+        "password": "Password123!"
+    })
+    user_token = reg_u.json()["access_token"]
+
+    # Normal user cannot access admin endpoint
+    res_u = client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {user_token}"})
+    assert res_u.status_code == 403
+    assert "Access denied" in res_u.json()["detail"]
+
+    # 2. Client user with role 'client'
+    client_email = f"auth_client_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg_c = client.post("/api/v1/auth/register", json={
+        "full_name": "Brand Partner",
+        "email": client_email,
+        "password": "Password123!"
+    })
+    client_token = reg_c.json()["access_token"]
+    # Register client organization and approve via admin
+    c_res = client.post("/api/v1/clients", json={"company_name": "Brand Org"}, headers={"Authorization": f"Bearer {client_token}"})
+    cid = c_res.json()["id"]
+
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={
+        "sub": str(admin_user.id),
+        "email": admin_user.email,
+        "role": admin_user.role
+    })
+    client.patch(
+        f"/api/v1/admin/clients/{cid}/status",
+        json={"account_status": "approved"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    # Client cannot access admin-only endpoint
+    res_c = client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {client_token}"})
+    assert res_c.status_code == 403
+    assert "Access denied" in res_c.json()["detail"]
+
+    # 3. Existing Administrator with role 'admin'
+    res_a = client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res_a.status_code == 200
+    assert isinstance(res_a.json(), list)
+
+    # 4. Unauthenticated request returns 401
+    res_unauth = client.get("/api/v1/admin/clients")
+    assert res_unauth.status_code == 401
+
+
+# ============================================================================
+# Complete Authentication & Authorization Security Audit Test Suite
+# (Scenarios 1-10)
+# ============================================================================
+
+def test_audit_1_anonymous_user_blocked_from_client_endpoints():
+    """1. Anonymous user accessing protected client endpoints returns 401 Unauthorized."""
+    fake_uuid = uuid.uuid4()
+    assert client.get("/api/v1/clients/me").status_code == 401
+    assert client.post("/api/v1/clients", json={"company_name": "Ghost Corp"}).status_code == 401
+    assert client.get("/api/v1/api-keys").status_code == 401
+    assert client.post("/api/v1/api-keys", json={"name": "Ghost Key"}).status_code == 401
+    assert client.delete(f"/api/v1/api-keys/{fake_uuid}").status_code == 401
+
+
+def test_audit_2_normal_user_blocked_from_admin_operations(db):
+    """2. Normal user attempting admin operations returns 403 Forbidden."""
+    email = f"audit_user_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg = client.post("/api/v1/auth/register", json={
+        "full_name": "Ordinary User",
+        "email": email,
+        "password": "Password123!"
+    })
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Attempt to list all client organizations
+    res_list = client.get("/api/v1/admin/clients", headers=headers)
+    assert res_list.status_code == 403
+    assert "Access denied" in res_list.json()["detail"]
+
+    # Attempt to approve a client
+    fake_cid = uuid.uuid4()
+    res_patch = client.patch(
+        f"/api/v1/admin/clients/{fake_cid}/status",
+        json={"account_status": "approved"},
+        headers=headers
+    )
+    assert res_patch.status_code == 403
+    assert "Access denied" in res_patch.json()["detail"]
+
+
+def test_audit_3_client_blocked_from_admin_operations(db):
+    """3. Client attempting admin operations returns 403 Forbidden."""
+    email = f"audit_client_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg = client.post("/api/v1/auth/register", json={
+        "full_name": "Commercial Client",
+        "email": email,
+        "password": "Password123!"
+    })
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # User creates client organization
+    c_res = client.post("/api/v1/clients", json={"company_name": "Commercial Brand"}, headers=headers)
+    cid = c_res.json()["id"]
+
+    # Admin approves client
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={"sub": str(admin_user.id), "email": admin_user.email, "role": "admin"})
+    client.patch(
+        f"/api/v1/admin/clients/{cid}/status",
+        json={"account_status": "approved"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    # Client now attempts admin operations -> must return 403
+    list_res = client.get("/api/v1/admin/clients", headers=headers)
+    assert list_res.status_code == 403
+    assert "Access denied" in list_res.json()["detail"]
+
+    status_res = client.patch(
+        f"/api/v1/admin/clients/{cid}/status",
+        json={"account_status": "suspended"},
+        headers=headers
+    )
+    assert status_res.status_code == 403
+
+
+def test_audit_4_user_cannot_access_another_user_records(db):
+    """4. User attempting to access another user's records is prevented (Multi-Tenant Isolation)."""
+    # User A creates tryon history
+    email_a = f"patron_a_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg_a = client.post("/api/v1/auth/register", json={"full_name": "Patron Alpha", "email": email_a, "password": "Password123!"})
+    token_a = reg_a.json()["access_token"]
+    user_a_id = uuid.UUID(reg_a.json()["user"]["id"])
+
+    # Manually seed a tryon history for User A
+    th = TryonHistory(
+        user_id=user_a_id,
+        garment_category="blazer",
+        input_image_reference="/inputs/alpha.jpg",
+        output_image_reference="/outputs/alpha.jpg",
+        generation_status="completed"
+    )
+    db.add(th)
+    ur = UsageRecord(user_id=user_a_id, operation_type="intelligent_tryon", usage_count=5)
+    db.add(ur)
+    db.commit()
+
+    # User B registers
+    email_b = f"patron_b_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg_b = client.post("/api/v1/auth/register", json={"full_name": "Patron Beta", "email": email_b, "password": "Password123!"})
+    token_b = reg_b.json()["access_token"]
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # User B fetches tryon history -> must be empty
+    history_b = client.get("/api/v1/tryon/history", headers=headers_b).json()
+    assert len(history_b) == 0
+
+    # User B fetches usage summary -> must not see User A's 5 operations
+    usage_b = client.get("/api/v1/usage/summary", headers=headers_b).json()
+    assert usage_b["usage_summary"] == {}
+
+    # User B calls /auth/me -> sees only User B
+    me_b = client.get("/api/v1/auth/me", headers=headers_b).json()
+    assert me_b["user"]["email"] == email_b
+
+
+def test_audit_5_client_cannot_access_another_client_resources(db):
+    """5. Client attempting to access another client's resources is prevented (IDOR protection)."""
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={"sub": str(admin_user.id), "email": admin_user.email, "role": "admin"})
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # Setup Client A
+    reg_a = client.post("/api/v1/auth/register", json={"full_name": "Client A", "email": f"ca_{uuid.uuid4().hex[:6]}@brand.com", "password": "Password123!"})
+    token_a = reg_a.json()["access_token"]
+    c_res_a = client.post("/api/v1/clients", json={"company_name": "Brand A"}, headers={"Authorization": f"Bearer {token_a}"})
+    cid_a = c_res_a.json()["id"]
+    client.patch(f"/api/v1/admin/clients/{cid_a}/status", json={"account_status": "approved"}, headers=admin_headers)
+    key_a_res = client.post("/api/v1/api-keys", json={"name": "Brand A Secret Key"}, headers={"Authorization": f"Bearer {token_a}"})
+    key_a_id = key_a_res.json()["id"]
+
+    # Setup Client B
+    reg_b = client.post("/api/v1/auth/register", json={"full_name": "Client B", "email": f"cb_{uuid.uuid4().hex[:6]}@brand.com", "password": "Password123!"})
+    token_b = reg_b.json()["access_token"]
+    c_res_b = client.post("/api/v1/clients", json={"company_name": "Brand B"}, headers={"Authorization": f"Bearer {token_b}"})
+    cid_b = c_res_b.json()["id"]
+    client.patch(f"/api/v1/admin/clients/{cid_b}/status", json={"account_status": "approved"}, headers=admin_headers)
+    key_b_res = client.post("/api/v1/api-keys", json={"name": "Brand B Public Key"}, headers={"Authorization": f"Bearer {token_b}"})
+
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # Client B lists API keys -> must only see key B, never key A
+    keys_b = client.get("/api/v1/api-keys", headers=headers_b).json()
+    assert len(keys_b) == 1
+    assert keys_b[0]["id"] != key_a_id
+
+    # Client B attempts to revoke Client A's key (IDOR attempt) -> 404
+    del_res = client.delete(f"/api/v1/api-keys/{key_a_id}", headers=headers_b)
+    assert del_res.status_code == 404
+    assert "not found" in del_res.json()["detail"].lower()
+
+    # Verify Key A is still active in database
+    key_a_db = db.query(ApiCredential).filter(ApiCredential.id == uuid.UUID(key_a_id)).first()
+    assert key_a_db.revoked_at is None
+
+
+def test_audit_6_unauthorized_client_api_key_creation_blocked(db):
+    """6. Unauthorized client API-key creation is blocked (no profile or pending profile)."""
+    # Case 1: User without client profile
+    reg_u = client.post("/api/v1/auth/register", json={"full_name": "No Client Org", "email": f"noclient_{uuid.uuid4().hex[:6]}@nutz.ai", "password": "Password123!"})
+    token_u = reg_u.json()["access_token"]
+    res1 = client.post("/api/v1/api-keys", json={"name": "Illegal Key"}, headers={"Authorization": f"Bearer {token_u}"})
+    assert res1.status_code == 404
+    assert "No client profile found" in res1.json()["detail"]
+
+    # Case 2: User with pending client organization
+    client.post("/api/v1/clients", json={"company_name": "Pending Corp"}, headers={"Authorization": f"Bearer {token_u}"})
+    res2 = client.post("/api/v1/api-keys", json={"name": "Pending Key"}, headers={"Authorization": f"Bearer {token_u}"})
+    assert res2.status_code == 403
+    assert "pending" in res2.json()["detail"].lower()
+
+
+def test_audit_7_unauthorized_client_approval_blocked(db):
+    """7. Unauthorized client approval attempt by non-admins returns 403 Forbidden."""
+    reg = client.post("/api/v1/auth/register", json={"full_name": "Pending Org Owner", "email": f"pending_{uuid.uuid4().hex[:6]}@corp.ai", "password": "Password123!"})
+    token = reg.json()["access_token"]
+    c_res = client.post("/api/v1/clients", json={"company_name": "Unapproved Corp"}, headers={"Authorization": f"Bearer {token}"})
+    cid = c_res.json()["id"]
+
+    # Attacker tries to approve self or another client
+    hacker_reg = client.post("/api/v1/auth/register", json={"full_name": "Attacker", "email": f"hacker_{uuid.uuid4().hex[:6]}@dark.ai", "password": "Password123!"})
+    hacker_token = hacker_reg.json()["access_token"]
+
+    hack_res = client.patch(
+        f"/api/v1/admin/clients/{cid}/status",
+        json={"account_status": "approved"},
+        headers={"Authorization": f"Bearer {hacker_token}"}
+    )
+    assert hack_res.status_code == 403
+
+    # Verify status in database remains pending
+    client_db = db.query(Client).filter(Client.id == uuid.UUID(cid)).first()
+    assert client_db.account_status == "pending"
+
+
+def test_audit_8_suspended_client_blocked_from_api_access(db):
+    """8. Suspended client attempting API access is blocked."""
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={"sub": str(admin_user.id), "email": admin_user.email, "role": "admin"})
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # Setup approved client with an active API key
+    reg = client.post("/api/v1/auth/register", json={"full_name": "Suspend Me", "email": f"suspend_{uuid.uuid4().hex[:6]}@brand.com", "password": "Password123!"})
+    token = reg.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    c_res = client.post("/api/v1/clients", json={"company_name": "Suspended Brand"}, headers=headers)
+    cid = c_res.json()["id"]
+    client.patch(f"/api/v1/admin/clients/{cid}/status", json={"account_status": "approved"}, headers=admin_headers)
+
+    key_res = client.post("/api/v1/api-keys", json={"name": "Pre-Suspension Key"}, headers=headers)
+    raw_key = key_res.json()["api_key"]
+
+    # Administrator suspends the client organization
+    susp_res = client.patch(f"/api/v1/admin/clients/{cid}/status", json={"account_status": "suspended"}, headers=admin_headers)
+    assert susp_res.status_code == 200
+    assert susp_res.json()["account_status"] == "suspended"
+
+    # Suspended client tries creating API key -> 403
+    bad_key_res = client.post("/api/v1/api-keys", json={"name": "Post-Suspension Key"}, headers=headers)
+    assert bad_key_res.status_code == 403
+    assert "suspended" in bad_key_res.json()["detail"].lower()
+
+    # Suspended client tries listing API keys -> 403
+    bad_list_res = client.get("/api/v1/api-keys", headers=headers)
+    assert bad_list_res.status_code == 403
+    assert "suspended" in bad_list_res.json()["detail"].lower()
+
+    # Using the pre-existing API key on service resolution -> rejected
+    resolved = resolve_user_from_headers({"x-api-key": raw_key}, db)
+    assert resolved is None, "API key belonging to suspended client must not resolve"
+
+
+def test_audit_9_admin_accesses_authorized_management_operations(db):
+    """9. Admin successfully accesses authorized management operations."""
+    admin_user = db.query(User).filter(User.role == "admin").first()
+    admin_token = create_access_token(data={"sub": str(admin_user.id), "email": admin_user.email, "role": "admin"})
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # List all clients
+    list_res = client.get("/api/v1/admin/clients", headers=admin_headers)
+    assert list_res.status_code == 200
+    assert isinstance(list_res.json(), list)
+
+    # Filter clients by status
+    filtered = client.get("/api/v1/admin/clients?status_filter=pending", headers=admin_headers)
+    assert filtered.status_code == 200
+    for c in filtered.json():
+        assert c["account_status"] == "pending"
+
+
+def test_audit_10_jwt_role_changes_and_stale_token_behavior(db):
+    """10. JWT role changes and stale token behavior: Live DB role always overrides stale token claims."""
+    # 1. User registers with DB role 'user', issues JWT with claim 'user'
+    email = f"stale_test_{uuid.uuid4().hex[:8]}@nutz.ai"
+    reg = client.post("/api/v1/auth/register", json={"full_name": "Stale Token Tester", "email": email, "password": "Password123!"})
+    stale_user_jwt = reg.json()["access_token"]
+    user_id = uuid.UUID(reg.json()["user"]["id"])
+
+    # Verify stale_user_jwt payload has role 'user'
+    assert decode_access_token(stale_user_jwt)["role"] == "user"
+
+    # User cannot access admin endpoint
+    assert client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {stale_user_jwt}"}).status_code == 403
+
+    # Admin promotes user in database to 'admin'
+    user_db = db.query(User).filter(User.id == user_id).first()
+    user_db.role = "admin"
+    db.commit()
+
+    # User presents the OLD token (which still contains payload role 'user')
+    # Because authorization reads current DB role, access to admin endpoint is now GRANTED!
+    assert client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {stale_user_jwt}"}).status_code == 200
+
+    # 2. Conversely: Demotion test
+    # Issue a token with payload role 'admin'
+    admin_jwt = create_access_token(data={"sub": str(user_id), "email": email, "role": "admin"})
+    assert decode_access_token(admin_jwt)["role"] == "admin"
+
+    # Demote user in database back to 'user'
+    user_db.role = "user"
+    db.commit()
+
+    # User presents token claiming 'role=admin'
+    # Because backend checks live DB user (role='user'), access is DENIED (403)!
+    demoted_res = client.get("/api/v1/admin/clients", headers={"Authorization": f"Bearer {admin_jwt}"})
+    assert demoted_res.status_code == 403
+    assert "Access denied" in demoted_res.json()["detail"]

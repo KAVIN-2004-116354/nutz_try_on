@@ -60,7 +60,7 @@ class Client(Base):
     contact_email = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
     business_type = Column(String(100), nullable=True)
-    account_status = Column(String(50), nullable=False, default="active")  # 'active', 'pending', 'suspended'
+    account_status = Column(String(50), nullable=False, default="pending")  # 'pending', 'approved', 'suspended'
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 

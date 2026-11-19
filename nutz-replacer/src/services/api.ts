@@ -46,7 +46,6 @@ export async function registerUser(params: {
   email: string;
   password: string;
   phone?: string;
-  role?: string;
 }): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
     method: 'POST',

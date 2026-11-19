@@ -174,7 +174,12 @@ def get_optional_user(
 
         if credential:
             if credential.expires_at is None or credential.expires_at > now:
-                if credential.client and credential.client.user and credential.client.user.is_active:
+                if (
+                    credential.client
+                    and credential.client.account_status in ("approved", "active")
+                    and credential.client.user
+                    and credential.client.user.is_active
+                ):
                     return credential.client.user
 
     return None
@@ -184,14 +189,14 @@ def get_authenticated_client(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ) -> Client:
-    """Ensures the authenticated user has an active Client profile."""
+    """Ensures the authenticated user has an approved Client profile."""
     client = db.query(Client).filter(Client.user_id == current_user.id).first()
     if not client:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No client profile found for current user account. Please create a client profile first."
         )
-    if client.account_status != "active":
+    if client.account_status not in ("approved", "active"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Client account is {client.account_status}. Please contact administrator."
