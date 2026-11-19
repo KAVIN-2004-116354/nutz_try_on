@@ -12,10 +12,19 @@ import { GenerationHistory } from './components/GenerationHistory';
 import { Footer } from './components/Footer';
 import { ImageModal } from './components/ImageModal';
 import { SignInModal } from './components/SignInModal';
-import { 
-  CloudStatus, GenerationStatus, ImageInputState, TryonResult, HistoryItem 
+import { ResetPasswordModal } from './components/ResetPasswordModal';
+import { VerifyEmailModal } from './components/VerifyEmailModal';
+import {
+  CloudStatus, GenerationStatus, ImageInputState, TryonResult, HistoryItem
 } from './types';
-import { getCloudStatus, executeIntelligentTryon } from './services/api';
+import {
+  getCloudStatus,
+  executeIntelligentTryon,
+  getCurrentUser,
+  clearAuthToken,
+  logoutUser,
+  fetchServerTryonHistory
+} from './services/api';
 import { SAMPLE_PERSONS, SAMPLE_GARMENTS } from './presets';
 import { triggerCelebration } from './services/confetti';
 import { AlertCircle, X, Layers, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -110,7 +119,7 @@ export const App: React.FC = () => {
   const [isZoomOpen, setIsZoomOpen] = useState<boolean>(false);
 
   // User Authentication State
-  const [user, setUser] = useState<{ email: string; name: string } | null>(() => {
+  const [user, setUser] = useState<{ email: string; name: string; role?: string; email_verified?: boolean } | null>(() => {
     try {
       const saved = localStorage.getItem('nutz_user');
       return saved ? JSON.parse(saved) : null;
@@ -120,7 +129,69 @@ export const App: React.FC = () => {
   });
   const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
 
-  const handleSignInSuccess = (newUser: { email: string; name: string }) => {
+  // Auth Flow Modals (Reset Password & Email Verification)
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState<boolean>(false);
+  const [verifyToken, setVerifyToken] = useState<string | null>(null);
+  const [isVerifyEmailOpen, setIsVerifyEmailOpen] = useState<boolean>(false);
+
+  // Detect URL tokens for password reset and email verification
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const path = url.pathname;
+      const params = new URLSearchParams(url.search);
+      const hash = url.hash;
+
+      // 1. Password Reset: /reset-password?token=... or ?token=...
+      if (
+        path.includes('reset-password') ||
+        hash.includes('reset-password') ||
+        (params.has('token') && (path.includes('reset') || hash.includes('reset')))
+      ) {
+        const token = params.get('token') || (hash.includes('token=') ? hash.split('token=')[1].split('&')[0] : null);
+        if (token) {
+          setResetToken(token);
+          setIsResetPasswordOpen(true);
+        }
+      }
+
+      // 2. Email Verification: /verify-email?token=... or ?token=...
+      if (
+        path.includes('verify-email') ||
+        hash.includes('verify-email') ||
+        (params.has('token') && (path.includes('verify') || hash.includes('verify')))
+      ) {
+        const token = params.get('token') || (hash.includes('token=') ? hash.split('token=')[1].split('&')[0] : null);
+        if (token) {
+          setVerifyToken(token);
+          setIsVerifyEmailOpen(true);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Validate and sync authenticated user on mount
+  useEffect(() => {
+    getCurrentUser().then((currentUser) => {
+      if (currentUser) {
+        const validatedUser = {
+          email: currentUser.email,
+          name: currentUser.full_name || currentUser.name,
+          role: currentUser.role,
+          email_verified: currentUser.email_verified,
+        };
+        setUser(validatedUser);
+        try {
+          localStorage.setItem('nutz_user', JSON.stringify(validatedUser));
+        } catch {}
+      }
+    });
+  }, []);
+
+  const handleSignInSuccess = (newUser: { email: string; name: string; role?: string; email_verified?: boolean }) => {
     setUser(newUser);
     try {
       localStorage.setItem('nutz_user', JSON.stringify(newUser));
@@ -129,17 +200,51 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleSignOut = () => {
-    setUser(null);
+  const handleSignOut = async () => {
     try {
-      localStorage.removeItem('nutz_user');
+      await logoutUser();
     } catch {
-      // ignore
+      clearAuthToken();
     }
+    setUser(null);
+    setHistory([]);
+    setIsSignInOpen(true);
   };
 
   // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  // Synchronize history with PostgreSQL when user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchServerTryonHistory().then((serverItems) => {
+        if (serverItems && serverItems.length > 0) {
+          const mapped: HistoryItem[] = serverItems.map((item) => ({
+            id: item.id,
+            timestamp: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            personThumb: item.output_image_reference || '',
+            garmentThumb: item.output_image_reference || '',
+            resultUrl: item.output_image_reference || '',
+            personName: 'Patron Fitting',
+            garmentName: item.garment_category ? item.garment_category.replace(/_/g, ' ') : 'Garment Look',
+            category: item.garment_category || 'Virtual Fitting',
+            model: 'FLUX-DEV-012',
+            latencySec: 14.8,
+            width: 1024,
+            height: 1024,
+            fileSizeStr: '1.8 MB',
+            status: 'completed',
+          }));
+
+          setHistory((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newItems = mapped.filter((m) => !existingIds.has(m.id));
+            return [...prev, ...newItems];
+          });
+        }
+      });
+    }
+  }, [user]);
 
   // Workspace ref
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -373,6 +478,7 @@ export const App: React.FC = () => {
         onSelectHeroTab={handleSelectHeroTab}
         onOpenHistory={() => handleNavigate('history')}
         onOpenSignIn={() => setIsSignInOpen(true)}
+        onOpenVerifyModal={() => setIsVerifyEmailOpen(true)}
         user={user}
         onSignOut={handleSignOut}
       />
@@ -630,6 +736,39 @@ export const App: React.FC = () => {
         isOpen={isSignInOpen}
         onClose={() => setIsSignInOpen(false)}
         onSuccess={handleSignInSuccess}
+      />
+
+      {/* Reset Password Modal */}
+      {resetToken && (
+        <ResetPasswordModal
+          isOpen={isResetPasswordOpen}
+          token={resetToken}
+          onClose={() => {
+            setIsResetPasswordOpen(false);
+            setResetToken(null);
+          }}
+          onSuccess={() => {
+            setIsResetPasswordOpen(false);
+            setResetToken(null);
+            setIsSignInOpen(true);
+          }}
+        />
+      )}
+
+      {/* Email Verification Modal */}
+      <VerifyEmailModal
+        isOpen={isVerifyEmailOpen}
+        token={verifyToken}
+        userEmail={user?.email || ''}
+        onClose={() => {
+          setIsVerifyEmailOpen(false);
+          setVerifyToken(null);
+        }}
+        onVerified={() => {
+          if (user) {
+            setUser({ ...user, email_verified: true });
+          }
+        }}
       />
     </div>
   );

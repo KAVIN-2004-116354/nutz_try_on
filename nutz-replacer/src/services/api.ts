@@ -1,7 +1,212 @@
-import { CloudStatus, TryonResult, GrokAnalysis } from '../types';
+import { CloudStatus, TryonResult, GrokAnalysis, UserProfile, AuthResponse, ServerTryonHistoryItem } from '../types';
 
 // In development, Vite proxies /api and /health to http://127.0.0.1:8000
 const API_BASE = '';
+
+/**
+ * Authentication Token Management
+ */
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem('nutz_token');
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string): void {
+  try {
+    localStorage.setItem('nutz_token', token);
+  } catch {}
+}
+
+export function clearAuthToken(): void {
+  try {
+    localStorage.removeItem('nutz_token');
+    localStorage.removeItem('nutz_user');
+  } catch {}
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/**
+ * Registers a new user account with production Argon2id backend.
+ */
+export async function registerUser(params: {
+  full_name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  role?: string;
+}): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Registration failed' }));
+    throw new Error(err.detail || 'Registration failed');
+  }
+  const data: AuthResponse = await res.json();
+  if (data.token || data.access_token) {
+    setAuthToken(data.token || data.access_token);
+  }
+  return data;
+}
+
+/**
+ * Authenticates user and stores JWT token in localStorage.
+ */
+export async function loginUser(params: {
+  email: string;
+  password: string;
+}): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Invalid credentials' }));
+    throw new Error(err.detail || 'Invalid email or password');
+  }
+  const data: AuthResponse = await res.json();
+  if (data.token || data.access_token) {
+    setAuthToken(data.token || data.access_token);
+  }
+  return data;
+}
+
+/**
+ * Securely terminates the session on the backend and clears localStorage.
+ * Handles logout even if access token is already expired.
+ */
+export async function logoutUser(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/api/v1/auth/logout`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+  } catch (err) {
+    console.warn('[Nutz Replacer API] Logout backend notification:', err);
+  } finally {
+    clearAuthToken();
+  }
+}
+
+/**
+ * Requests password reset instructions.
+ */
+export async function forgotPassword(email: string): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(err.detail || 'Failed to request password reset instructions.');
+  }
+  return await res.json();
+}
+
+/**
+ * Resets user password using single-use secret token.
+ */
+export async function resetPassword(token: string, new_password: string): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ token, new_password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Reset failed' }));
+    throw new Error(err.detail || 'Password reset failed. The link may have expired or already been used.');
+  }
+  return await res.json();
+}
+
+/**
+ * Verifies email address using token from verification email.
+ */
+export async function verifyEmail(token: string): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/verify-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Verification failed' }));
+    throw new Error(err.detail || 'Email verification failed or link has expired.');
+  }
+  return await res.json();
+}
+
+/**
+ * Resends verification email to specified address.
+ */
+export async function resendVerification(email: string): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_BASE}/api/v1/auth/resend-verification`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Resend failed' }));
+    throw new Error(err.detail || 'Failed to resend verification email.');
+  }
+  return await res.json();
+}
+
+/**
+ * Retrieves profile of currently authenticated user.
+ */
+export async function getCurrentUser(): Promise<UserProfile | null> {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAuthToken();
+      }
+      return null;
+    }
+    const data = await res.json();
+    return data.user as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetches tryon history recorded in PostgreSQL for the active user.
+ */
+export async function fetchServerTryonHistory(): Promise<ServerTryonHistoryItem[]> {
+  const token = getAuthToken();
+  if (!token) return [];
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/tryon/history`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Sanitizes and maps server error messages to user-friendly messages,
@@ -132,6 +337,7 @@ export async function executeFluxTryon(params: GenerateTryonParams): Promise<Try
   try {
     const response = await fetch(`${API_BASE}/api/v1/flux-tryon`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
       signal: controller.signal,
     });
@@ -355,6 +561,7 @@ export async function executeIntelligentTryon(params: {
   try {
     const response = await fetch(`${API_BASE}/api/v1/intelligent-tryon`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
       signal: controller.signal,
     });
