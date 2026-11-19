@@ -167,7 +167,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   };
 
   const handleGuestSignIn = () => {
-    onSuccess?.({ email: 'guest@nutz.ai', name: 'Guest Atelier Client' });
+    onSuccess?.({ email: 'guest@nutz.ai', name: 'Guest' });
     onClose();
   };
 
@@ -438,7 +438,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                       className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-[#171717] transition-colors cursor-pointer"
                     >
                       <User className="w-3 h-3" />
-                      <span>Continue as Guest Atelier Client</span>
+                      <span>Continue as Guest</span>
                     </button>
                   </div>
                 )}
