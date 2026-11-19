@@ -446,10 +446,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               </div>
             ) : null}
 
-            {/* Footer Disclaimer */}
-            <p className="text-[10px] text-slate-400 mt-6 leading-relaxed">
-              Secured with Argon2id password encryption &amp; PostgreSQL persistence.
-            </p>
+            {/* Actions / Buttons end */}
           </div>
         </motion.div>
       </div>
