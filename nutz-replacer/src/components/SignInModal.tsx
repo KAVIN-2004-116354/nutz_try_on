@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Sparkles, KeyRound, ArrowLeft } from 'lucide-react';
+import { X, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, KeyRound, ArrowLeft } from 'lucide-react';
 import { loginUser, registerUser, forgotPassword } from '../services/api';
 
 interface SignInModalProps {
@@ -395,7 +395,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                       disabled={isLoading || !fullName || !registerEmail || !registerPassword}
                       className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#171717] hover:bg-[#2B2B38] text-white font-bold text-xs shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group mt-2"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                       <span>{isLoading ? 'Creating Account...' : 'Create Account'}</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </button>
