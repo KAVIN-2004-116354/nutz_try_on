@@ -172,9 +172,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <h3 className="text-sm font-extrabold text-[#171717]">
                       Live Studio Simulation
                     </h3>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      Instant garment drape &amp; posture synthesis
-                    </p>
                   </div>
 
                   {/* Quick-Select Outfits in Hero */}
