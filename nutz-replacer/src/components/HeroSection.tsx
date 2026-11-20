@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Sparkles, History, Check } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WordCycle } from './ui/WordCycle';
 import { RadiantGrid } from './ui/RadiantGrid';
@@ -168,18 +168,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 {/* Showcase Header with live outfit selector pills */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE7E0]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-[#171717] text-white flex items-center justify-center shadow-sm">
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-[#171717]">
-                        Live Studio Simulation
-                      </h3>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Instant garment drape &amp; posture synthesis
-                      </p>
-                    </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#171717]">
+                      Live Studio Simulation
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Instant garment drape &amp; posture synthesis
+                    </p>
                   </div>
 
                   {/* Quick-Select Outfits in Hero */}
@@ -338,18 +333,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 {/* Header */}
                 <div className="flex items-center justify-between pb-6 border-b border-[#EAE7E0]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-[#171717] text-white flex items-center justify-center shadow-sm">
-                      <History className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold text-[#171717]">
-                        LookHistory Recent Atelier Gallery
-                      </h3>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Recent bespoke fitting transformations
-                      </p>
-                    </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#171717]">
+                      LookHistory Recent Atelier Gallery
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Recent bespoke fitting transformations
+                    </p>
                   </div>
 
                   <span className="px-3 py-1 rounded-full bg-[#171717]/5 text-[#171717] text-xs font-bold">
