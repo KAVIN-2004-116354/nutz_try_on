@@ -388,10 +388,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* Footer Bar */}
-                <div className="mt-6 pt-4 border-t border-[#EAE7E0] flex items-center justify-between text-xs">
-                  <span className="text-slate-500 text-[11px] font-medium">
-                    High-Definition 1024×1024 Render Archive
-                  </span>
+                <div className="mt-6 pt-4 border-t border-[#EAE7E0] flex items-center justify-end text-xs">
                   <button
                     type="button"
                     onClick={onEnterStudio}
