@@ -272,12 +272,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         />
                       )}
 
-                      {/* Fit Accuracy Badge */}
-                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#171717]/90 text-white text-[10px] font-bold backdrop-blur-md shadow-md flex items-center gap-1.5 z-10">
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span>Fit Truth: {selectedOutfit.fitScore}</span>
-                      </div>
-
                       {/* Bottom Info Banner */}
                       <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-white/95 backdrop-blur-md border border-[#EAE7E0] shadow-md z-10 flex items-center justify-between">
                         <div>
