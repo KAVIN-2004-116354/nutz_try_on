@@ -295,16 +295,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* Footer Bar inside Card */}
-                <div className="mt-6 pt-4 border-t border-[#EAE7E0] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-4 text-slate-500 text-[11px] font-medium">
-                    <span className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      Zero Garment Crease Distortion
-                    </span>
-                    <span className="hidden sm:inline">•</span>
-                    <span className="hidden sm:inline">100% Posture Preservation</span>
-                  </div>
-
+                <div className="mt-6 pt-4 border-t border-[#EAE7E0] flex items-center justify-end text-xs">
                   <button
                     type="button"
                     onClick={onEnterStudio}
