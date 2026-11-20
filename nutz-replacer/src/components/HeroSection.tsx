@@ -272,9 +272,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <span className="block text-xs font-extrabold text-[#171717]">
                             {selectedOutfit.title}
                           </span>
-                          <span className="block text-[10px] text-slate-500 font-medium">
-                            {selectedOutfit.tag} • Authentic Weave
-                          </span>
                         </div>
                         <button
                           type="button"

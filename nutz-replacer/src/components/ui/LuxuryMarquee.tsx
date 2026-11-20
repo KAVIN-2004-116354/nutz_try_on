@@ -1,17 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const FABRICS = [
-  'Mulberry Silk',
-  'Italian Wool',
-  'Japanese Selvedge Denim',
-  'Belgian Linen',
-  'Royal Velvet',
-  'Oxford Pima Cotton',
-  'Brocade Weave',
-  'Satin Charmeuse',
-  'Zardozi Embroidery',
-  'Fine Cashmere',
+const BRANDS = [
+  'Allen Solly',
+  'Louis Philippe',
+  'U.S. Polo Assn.',
+  'Van Heusen',
+  'Peter England',
+  'Raymond',
+  'Zara',
+  "Levi's",
+  'Tommy Hilfiger',
+  'Calvin Klein',
+  'Manyavar',
+  'FabIndia',
 ];
 
 export const LuxuryMarquee: React.FC = () => {
@@ -31,10 +33,10 @@ export const LuxuryMarquee: React.FC = () => {
         }}
         className="flex items-center gap-8 whitespace-nowrap will-change-transform"
       >
-        {[...FABRICS, ...FABRICS].map((fabric, idx) => (
+        {[...BRANDS, ...BRANDS].map((brand, idx) => (
           <div key={idx} className="flex items-center gap-8 group">
             <span className="text-xs font-semibold tracking-widest uppercase text-slate-500 hover:text-[#171717] transition-colors cursor-default">
-              {fabric}
+              {brand}
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#171717]/20 group-hover:bg-[#171717] transition-colors" />
           </div>
