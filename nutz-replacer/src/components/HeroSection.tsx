@@ -322,9 +322,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <h3 className="text-sm font-extrabold text-[#171717]">
                       LookHistory Recent Atelier Gallery
                     </h3>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      Recent bespoke fitting transformations
-                    </p>
                   </div>
 
                   <span className="px-3 py-1 rounded-full bg-[#171717]/5 text-[#171717] text-xs font-bold">
