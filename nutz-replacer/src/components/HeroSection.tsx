@@ -212,9 +212,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <span className="block text-[11px] font-extrabold text-[#171717]">
                             {selectedOutfit.modelName}
                           </span>
-                          <span className="block text-[9px] text-slate-500 font-medium">
-                            Neutral Studio Light
-                          </span>
                         </div>
                         <span className="px-2 py-0.5 rounded-md bg-[#171717]/5 text-[#171717] text-[10px] font-bold">
                           Client
