@@ -361,9 +361,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <h4 className="text-xs font-extrabold text-[#171717] line-clamp-1">
                           {item.title}
                         </h4>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
-                          Client: {item.client} • {item.specs}
-                        </p>
 
                         <button
                           type="button"
